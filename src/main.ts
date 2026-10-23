@@ -162,199 +162,268 @@ function renderSchema(tables: Table[]) {
     for (const column of table.columns) {
       const row = element('div', 'table-column');
       row.append(element('span', '', column.name), element('small', '', column.type));
-      details.append(row);…5173 tokens truncated…solid var(--site-border); color: var(--site-muted); border-radius: 4px; padding: 0 4px; font: 10px/15px var(--site-font-mono); margin-left: 5px; }
-.icon-button { border: 0; padding: 0; width: 25px; height: 25px; font-size: 16px; line-height: 1; }
-.schema-list { min-height: 125px; margin-top: 5px; max-height: 340px; overflow: auto; }
-.table-entry { margin-bottom: 3px; }
-.table-entry summary { list-style: none; cursor: pointer; padding: 6px 5px; display: flex; gap: 7px; align-items: center; font: 12px var(--site-font-mono); border-radius: 5px; }
-.table-entry summary::-webkit-details-marker { display: none; }
-.table-entry summary::before { content: '›'; color: var(--site-muted); font-size: 14px; width: 7px; }
-.table-entry[open] summary::before { transform: rotate(90deg); }
-.table-entry summary:hover { background: var(--site-soft); }
-.table-entry .table-name { overflow: hidden; text-overflow: ellipsis; }
-.table-icon { color: var(--site-accent); font-size: 13px; }
-.table-kind { font: 10px var(--site-font-sans); margin-left: auto; color: var(--site-muted); }
-.table-column { padding: 4px 5px 4px 30px; display: flex; gap: 7px; justify-content: space-between; font: 10px/1.5 var(--site-font-mono); }
-.table-column span { overflow: hidden; text-overflow: ellipsis; }
-.table-column small { font: inherit; color: var(--site-muted); text-align: right; overflow-wrap: anywhere; }
-.preview-table { display: block; border: 0; font-size: 10px; padding: 3px 5px 6px 30px; color: var(--site-accent); text-align: left; }
-.example-label { margin-top: 22px; border-top: 1px solid var(--site-border); padding-top: 19px; height: 37px; }
-.small-arrow { font-size: 16px; }
-.example-list { display: flex; flex-direction: column; gap: 3px; padding-top: 10px; }
-.example-button { border: 1px solid transparent; text-align: left; padding: 8px 9px; font-size: 12px; display: flex; align-items: center; gap: 10px; border-radius: 6px; }
-.example-button .example-number { color: var(--site-muted); font: 10px var(--site-font-mono); opacity: .7; }
-.example-button.active { background: var(--site-accent-soft); color: var(--site-accent); border-color: color-mix(in srgb, var(--site-accent) 15%, transparent); }
-.example-button.active::after { content: '↗'; margin-left: auto; }
-.sidebar-bottom { display: flex; gap: 6px; align-items: center; font-size: 10px; color: var(--site-muted); margin: auto 5px 0; padding-top: 30px; }
-.sidebar-bottom .local-dot { width: 4px; height: 4px; background: var(--site-success); }
-.workbench { min-width: 0; }
-.editor-heading { display: flex; align-items: center; justify-content: space-between; min-height: 46px; border-bottom: 1px solid var(--site-border); padding: 0 16px 0 20px; }
-.file-tab { display: flex; align-items: center; gap: 9px; font: 11px var(--site-font-mono); }
-.code-symbol { color: var(--site-accent); font-size: 14px; }
-.saved-dot { display: inline-block; height: 5px; width: 5px; border-radius: 50%; background: var(--site-muted); opacity: .5; }
-.saved-dot.error { background: var(--site-danger); opacity: 1; }
-.file-actions { display: flex; gap: 12px; }
-.text-button { border: 0; padding: 3px 0; font-size: 11px; color: var(--site-muted); }
-.text-button:hover:not(:disabled) { color: var(--site-accent); background: transparent; text-decoration: underline; text-underline-offset: 3px; }
-#editor { min-height: 260px; }
-.cm-editor { font: 13px/1.9 var(--site-font-mono); color: var(--site-text); background: var(--site-surface); }
-.cm-editor.cm-focused { outline: 0; }
-.cm-editor .cm-scroller { font-family: var(--site-font-mono); height: 279px; overflow: auto; }
-.cm-editor .cm-content { padding: 20px 0 24px; caret-color: var(--site-accent); }
-.cm-editor .cm-line { padding: 0 22px 0 14px; }
-.cm-editor .cm-gutters { border: 0; background: transparent; color: var(--site-muted); font-size: 11px; }
-.cm-editor .cm-gutterElement { padding: 0 10px 0 16px; }
-.cm-editor .cm-activeLine, .cm-editor .cm-activeLineGutter { background: color-mix(in srgb, var(--site-soft) 45%, transparent); }
-.cm-editor .cm-selectionBackground, .cm-editor.cm-focused .cm-selectionBackground { background: var(--site-accent-soft); }
-.cm-editor .cm-cursor { border-left-color: var(--site-accent); }
-.cm-editor .cm-tooltip { background: var(--site-surface); color: var(--site-text); border: 1px solid var(--site-border); }
-.editor-footer { padding: 7px 18px; font: 10px var(--site-font-mono); color: var(--site-muted); display: flex; justify-content: space-between; border-top: 1px solid color-mix(in srgb, var(--site-border) 45%, transparent); }
-.separator { margin: 0 6px; opacity: .5; }
-.query-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--site-border); }
-.plan-actions, .run-actions { display: flex; gap: 7px; align-items: center; }
-.plan-actions button { font: 10px/1.5 var(--site-font-mono); padding: 7px 10px; }
-.button-plus { margin-left: 3px; color: var(--site-muted); }
-.run-shortcut { font: 10px var(--site-font-mono); color: var(--site-muted); margin-right: 5px; }
-.primary-button { background: var(--site-accent); color: var(--site-on-accent); border-color: var(--site-accent); padding: 7px 13px; font-size: 12px; display: inline-flex; align-items: center; gap: 7px; font-weight: 550; }
-.primary-button:hover:not(:disabled) { background: color-mix(in srgb, var(--site-accent) 85%, var(--site-text)); }
-.primary-button svg { width: 12px; height: 12px; }
-.output-heading { min-height: 45px; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 18px; border-block: 1px solid var(--site-border); background: color-mix(in srgb, var(--site-soft) 25%, var(--site-surface)); }
-.output-tabs { display: flex; gap: 22px; min-width: 0; }
-.output-tabs button { padding: 13px 0 12px; font-size: 11px; border: 0; border-radius: 0; white-space: nowrap; color: var(--site-muted); position: relative; }
-.output-tabs button[aria-selected="true"] { color: var(--site-accent); font-weight: 650; }
-.output-tabs button[aria-selected="true"]::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--site-accent); }
-.output-tabs button:hover { background: transparent; color: var(--site-accent); }
-.execution-summary { font: 10px var(--site-font-mono); color: var(--site-muted); text-align: right; }
-.empty-state { display: flex; align-items: center; justify-content: center; flex-direction: column; min-height: 228px; padding: 30px 15px; text-align: center; }
-.empty-code { color: var(--site-muted); font: 13px var(--site-font-mono); opacity: .65; margin-bottom: 18px; }
-.empty-code span { color: var(--site-accent); }
-.empty-state strong { font-size: 14px; font-weight: 550; }
-.empty-state p { font-size: 11px; color: var(--site-muted); line-height: 1.9; margin: 8px 0 0; }
-.empty-label { color: var(--site-muted); font-size: 10px; margin-top: 18px; opacity: .8; }
-.result-controls { display: flex; justify-content: space-between; align-items: center; padding: 9px 16px; gap: 10px; border-bottom: 1px solid var(--site-border); }
-.result-choices { display: flex; gap: 5px; overflow: auto; }
-.result-choice { font-size: 10px; padding: 4px 8px; white-space: nowrap; }
-.result-choice[aria-pressed="true"] { color: var(--site-accent); border-color: var(--site-accent); }
-.table-scroll { overflow: auto; max-height: 380px; }
-.result-table { border-collapse: collapse; text-align: left; width: 100%; font: 11px/1.6 var(--site-font-mono); white-space: nowrap; }
-.result-table th { background: var(--site-soft); font-weight: 500; color: var(--site-muted); position: sticky; top: 0; z-index: 1; }
-.result-table td, .result-table th { padding: 8px 15px; border-bottom: 1px solid color-mix(in srgb, var(--site-border) 60%, transparent); }
-.result-table .row-number { color: var(--site-muted); font-size: 10px; text-align: right; width: 34px; padding-right: 7px; opacity: .7; }
-.result-table tbody tr:hover { background: color-mix(in srgb, var(--site-soft) 50%, transparent); }
-.null-cell { color: var(--site-muted); font-style: italic; opacity: .7; }
-.result-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 10px; color: var(--site-muted); padding: 9px 16px; }
-.pagination { display: flex; gap: 8px; align-items: center; }
-.pagination button { padding: 1px 7px; font-size: 12px; }
-.success-message { padding: 30px 22px; font-size: 13px; }
-.success-message strong { color: var(--site-success); }
-.notice { font: 11px/1.8 var(--site-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; padding: 9px 16px; border-top: 1px solid var(--site-border); color: var(--site-muted); }
-.query-error { margin: 12px 16px; border: 1px solid color-mix(in srgb, var(--site-danger) 30%, transparent); background: var(--site-danger-soft); color: var(--site-danger); padding: 13px; border-radius: 7px; font-size: 12px; overflow-wrap: anywhere; }
-.query-error pre { white-space: pre-wrap; font: 11px/1.8 var(--site-font-mono); margin: 7px 0 0; }
-.query-error button { color: var(--site-danger); font-size: 11px; margin-top: 10px; border-color: currentColor; }
-.plan-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 17px; border-bottom: 1px solid var(--site-border); font: 11px var(--site-font-mono); flex-wrap: wrap; }
-.plan-metrics { display: flex; gap: 16px; color: var(--site-muted); flex-wrap: wrap; }
-.plan-metrics strong { color: var(--site-accent); margin-left: 5px; font-weight: 500; }
-.plan-tree { padding: 13px 17px; overflow: auto; max-height: 500px; }
-.plan-node { margin-left: 16px; border-left: 1px solid var(--site-border); padding: 4px 0 4px 14px; }
-.plan-tree > .plan-node { margin-left: 0; border-left: 0; padding-left: 0; }
-.plan-node > summary { cursor: pointer; font: 12px/1.8 var(--site-font-mono); padding: 4px 0; }
-.plan-node > summary strong { font-weight: 600; color: var(--site-accent); }
-.plan-node > summary span { margin-left: 8px; color: var(--site-muted); font-size: 10px; }
-.plan-details { font: 10px/1.8 var(--site-font-mono); margin: 0 0 8px; color: var(--site-muted); white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 13px; }
-.plan-json { padding: 15px 18px; font: 11px/1.8 var(--site-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; max-height: 500px; overflow: auto; }
-.history-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--site-muted); padding: 13px 17px; }
-.history-row { width: 100%; text-align: left; border: 0; border-top: 1px solid var(--site-border); border-radius: 0; padding: 12px 17px; display: flex; gap: 12px; align-items: center; }
-.history-status { width: 5px; height: 5px; background: var(--site-success); border-radius: 50%; flex-shrink: 0; }
-.history-status.failed { background: var(--site-danger); }
-.history-sql { font: 11px/1.6 var(--site-font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
-.history-meta { font: 10px/1.6 var(--site-font-mono); color: var(--site-muted); text-align: right; flex-shrink: 0; }
-#history-panel { max-height: 400px; overflow: auto; }
-.workspace-footnote { display: flex; justify-content: space-between; gap: 15px; align-items: center; padding: 13px 2px; }
-.workspace-footnote p { margin: 0; display: flex; align-items: center; gap: 7px; color: var(--site-muted); font-size: 10px; }
-.workspace-footnote .local-dot { width: 4px; height: 4px; background: var(--site-success); }
-.workspace-footnote > button { flex-shrink: 0; font-size: 10px; }
-.danger-text { color: var(--site-danger); }
-.help { border-top: 1px solid var(--site-border); margin-top: 18px; }
-.help > summary { list-style: none; cursor: pointer; padding: 17px 0; color: var(--site-muted); font-size: 12px; display: flex; align-items: center; gap: 13px; }
-.help > summary span { font-size: 10px; opacity: .7; }
-.help > summary::after { content: '+'; font: 16px var(--site-font-mono); margin-left: auto; }
-.help[open] > summary::after { content: '−'; }
-.help-content { color: var(--site-muted); font-size: 12px; line-height: 1.9; max-width: 800px; padding-bottom: 17px; }
-.help-content strong { color: var(--site-text); font-weight: 550; }
-.help-content a + a { margin-left: 20px; }
-.site-ui-footer { margin-top: 25px; }
-.subtle { color: var(--site-muted); font-size: 11px; }
-.loading-copy { padding: 0 6px; }
-.connection-error { border: 1px solid var(--site-border); border-radius: 8px; background: var(--site-warning-soft); color: var(--site-warning); padding: 12px 16px; margin-bottom: 18px; font-size: 13px; }
-.connection-error p { margin: 0 0 9px; }
-.connection-error button { color: var(--site-text); font-size: 11px; margin-right: 7px; }
-dialog { border: 1px solid var(--site-border); border-radius: var(--site-radius-card); background: var(--site-surface); color: var(--site-text); padding: 28px; max-width: 430px; width: calc(100% - 40px); box-shadow: var(--site-shadow); }
-dialog::backdrop { background: #112c2670; backdrop-filter: blur(3px); }
-.dialog-kicker { font-size: 11px; color: var(--site-accent); }
-dialog h2 { margin: 8px 0 15px; font-size: 22px; letter-spacing: -.04em; }
-dialog p { font-size: 13px; color: var(--site-muted); line-height: 1.9; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 23px; }
-.dialog-actions button { font-size: 12px; padding: 8px 14px; }
-.danger-button { background: var(--site-danger); color: var(--site-on-accent); border-color: var(--site-danger); }
-.danger-button:hover { color: var(--site-danger); }
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 40px); background: var(--site-text); color: var(--site-bg); border: 1px solid var(--site-border); border-radius: 8px; padding: 10px 18px; font-size: 13px; z-index: 80; box-shadow: var(--site-shadow); }
-.skip-link { position: absolute; top: -70px; left: 20px; z-index: 100; background: var(--site-surface); padding: 12px; }
-.skip-link:focus { top: 10px; }
-.no-script { padding: 20px; text-align: center; }
-@media (min-width: 1500px) { .page-heading { padding-top: 50px; } .cm-editor .cm-scroller { height: 320px; } }
-@media (max-width: 900px) { .app-shell { width: calc(100% - 56px); } .workspace { grid-template-columns: 185px minmax(0, 1fr); } .run-shortcut { display: none; } .connection { min-width: 145px; } }
-@media (max-width: 700px) {
-  .app-shell { width: calc(100% - 32px); }
-  .page-heading { padding: 26px 0 22px; align-items: flex-start; flex-direction: column; gap: 16px; }
-  .eyebrow { font-size: 10px; margin-bottom: 9px; }
-  .intro { font-size: 12px; }
-  .intro span { display: block; margin: 3px 0 0; }
-  .connection { gap: 7px; align-items: center; margin: 0; }
-  .connection-dot { margin-top: 0; }
-  .connection > div { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-  .connection strong { font-size: 11px; }
-  .connection small { margin: 0; font-size: 10px; }
-  .workspace { grid-template-columns: 1fr; }
-  .sidebar { border-right: 0; border-bottom: 1px solid var(--site-border); padding: 12px; }
-  .sidebar-heading, .database-label, .sidebar-bottom { display: none; }
-  .sidebar .section-label { padding-inline: 3px; }
-  .schema-list { min-height: 0; max-height: 150px; margin-top: 0; }
-  .schema-list .table-entry { display: inline-block; vertical-align: top; width: 49%; }
-  .example-label { border-top: 1px solid var(--site-border); margin-top: 8px; padding-top: 10px; height: 26px; }
-  .example-list { flex-direction: row; flex-wrap: wrap; gap: 3px; padding-top: 7px; }
-  .example-button { padding: 5px 6px; font-size: 11px; gap: 5px; }
-  .example-button.active::after { display: none; }
-  .example-number { display: none; }
-  .editor-heading { padding: 0 12px; min-height: 42px; }
-  .file-actions { gap: 10px; }
-  .cm-editor { font-size: 12px; }
-  .cm-editor .cm-scroller { height: 245px; }
-  .cm-editor .cm-content { padding-top: 15px; }
-  .cm-editor .cm-line { padding-left: 7px; }
-  .cm-editor .cm-gutterElement { padding-left: 7px; }
-  .query-toolbar { padding: 10px; gap: 8px; }
-  .plan-actions { gap: 4px; }
-  .plan-actions button { padding: 7px; font-size: 10px; }
-  .primary-button { font-size: 11px; padding: 7px 10px; }
-  .output-heading { padding: 0 12px; flex-wrap: wrap; gap: 0; }
-  .output-tabs { gap: 20px; }
-  .execution-summary { font-size: 10px; padding-block: 4px; }
-  .empty-code { font-size: 11px; }
-  .result-table td, .result-table th { padding: 7px 11px; }
-  .result-footer { padding: 9px 12px; flex-wrap: wrap; }
-  .workspace-footnote { align-items: flex-start; gap: 9px; }
-  .workspace-footnote p { align-items: flex-start; font-size: 10px; }
-  .workspace-footnote .local-dot { margin-top: 5px; }
-  .help { margin-top: 9px; }
+      details.append(row);
+    }
+    details.append(button('预览前 100 行 ↗', 'preview-table', () => replaceSQL(`SELECT *\nFROM ${qualified}\nLIMIT 100;`)));
+    $('schema-list').append(details);
+  }
+  if (!tables.length) $('schema-list').append(element('p', 'subtle loading-copy', '还没有表，写一条 CREATE TABLE 开始。'));
+  editor.dispatch({effects: language.reconfigure(sql({dialect: PostgreSQL, schema: completions, upperCaseKeywords: true}))});
 }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
-
-.node-properties { margin: 2px 0 8px 13px; }
-.node-properties > summary { font-size: 10px; color: var(--site-muted); cursor: pointer; }
-
-.timeout-control { display: flex; align-items: center; gap: 6px; color: var(--site-muted); font-size: 11px; white-space: nowrap; }
-.timeout-control select { padding: 6px 7px; border: 1px solid var(--site-border); border-radius: 5px; background: var(--site-bg); color: var(--site-text); font: inherit; }
-.stop-button { color: var(--site-danger); border-color: var(--site-danger); }
-@media (max-width: 700px) {
-  .run-actions { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+async function refreshSchema() {
+  try { renderSchema(await db.call<Table[]>('schema')); }
+  catch (error) { toast('表结构暂未更新：' + (error as Error).message); }
 }
+async function connect(mode = 'persistent') {
+  if (busy) return;
+  ready = false;
+  setBusy(true);
+  $('connection-status').textContent = '正在启动数据库…';
+  $('connection-dot').className = 'connection-dot';
+  $('connection-error').hidden = true;
+  try {
+    const info = await db.start(mode);
+    renderSchema(info.tables);
+    ready = true;
+    $('connection-status').textContent = mode === 'memory' ? '临时数据库已就绪' : '本地数据库已就绪';
+    $('connection-dot').className = 'connection-dot ready';
+    $('engine-version').textContent = `PostgreSQL ${info.version} · PGlite 0.5.11`;
+    $('storage-mode').textContent = mode === 'memory' ? '临时模式，关闭后丢失' : '保存在当前浏览器';
+    $('persistence-note').textContent = mode === 'memory' ? '临时模式：数据库在页面关闭或刷新后消失；SQL 草稿与历史记录仍尝试保存在当前浏览器。' : '数据库、SQL 草稿和历史记录保存在当前浏览器；清理网站数据会将它们删除。';
+  } catch (error) { connectionError(error); }
+  finally { setBusy(false); }
+}
+
+const tabNames = ['results', 'plan', 'history'];
+function showTab(name: string) {
+  for (const tab of tabNames) {
+    const active = name === tab;
+    $('tab-' + tab).setAttribute('aria-selected', String(active));
+    $('tab-' + tab).tabIndex = active ? 0 : -1;
+    $(tab + '-panel').hidden = !active;
+  }
+}
+tabNames.forEach((name, index) => {
+  $('tab-' + name).addEventListener('click', () => showTab(name));
+  $('tab-' + name).addEventListener('keydown', event => {
+    let next = index;
+    if (event.key === 'ArrowRight') next = (index + 1) % tabNames.length;
+    else if (event.key === 'ArrowLeft') next = (index + tabNames.length - 1) % tabNames.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = tabNames.length - 1;
+    else return;
+    event.preventDefault(); showTab(tabNames[next]); $('tab-' + tabNames[next]).focus();
+  });
+});
+function emptyPanel(panel: HTMLElement, title: string, text: string) {
+  const empty = element('div', 'empty-state');
+  empty.append(element('strong', '', title), element('p', '', text));
+  panel.replaceChildren(empty);
+}
+function download(data: BlobPart, name: string, type: string) {
+  const url = URL.createObjectURL(new Blob([data], {type}));
+  const link = element('a');
+  link.href = url; link.download = name; link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function renderResults() {
+  const panel = $('results-panel');
+  panel.replaceChildren();
+  const current = results[selectedResult];
+  if (!current) { emptyPanel(panel, '没有返回结果', '输入 SQL 后点击“运行 SQL”。'); return; }
+  const controls = element('div', 'result-controls');
+  const choices = element('div', 'result-choices');
+  results.forEach((result, index) => {
+    const node = button(`${index + 1} · ${result.command || (result.fields.length ? '结果集' : '完成')}`, 'result-choice', () => { selectedResult = index; page = 0; renderResults(); });
+    node.setAttribute('aria-pressed', String(selectedResult === index)); choices.append(node);
+  });
+  controls.append(choices);
+  if (current.fields.length) controls.append(button('导出 CSV ↓', 'text-button', () => download(toCSV(current), 'query-result.csv', 'text/csv;charset=utf-8')));
+  panel.append(controls);
+  if (!current.fields.length) {
+    const message = element('div', 'success-message');
+    message.append(element('strong', '', '✓ 执行完成'), element('span', '', current.affectedRows !== undefined ? ` · 影响 ${current.affectedRows.toLocaleString()} 行` : ''));
+    panel.append(message);
+  } else {
+    const scroll = element('div', 'table-scroll');
+    const table = element('table', 'result-table');
+    const thead = element('thead');
+    const headers = element('tr');
+    const numberHeader = element('th', 'row-number', '#'); numberHeader.scope = 'col'; headers.append(numberHeader);
+    current.fields.forEach(field => { const th = element('th', '', field.name); th.scope = 'col'; th.title = `PostgreSQL 类型 OID: ${field.dataTypeID}`; headers.append(th); });
+    thead.append(headers); table.append(thead);
+    const body = element('tbody');
+    current.rows.slice(page * 100, (page + 1) * 100).forEach((row, index) => {
+      const tr = element('tr');
+      tr.append(element('td', 'row-number', String(page * 100 + index + 1)));
+      current.fields.forEach((_, column) => {
+        const value = row[column];
+        const text = cellText(value, current.fields[column].dataTypeID);
+        const td = element('td', value === null ? 'null-cell' : '', value === null ? 'NULL' : text.length > 500 ? text.slice(0, 500) + '…' : text);
+        if (text.length > 80) td.title = text.slice(0, 4000);
+        tr.append(td);
+      });
+      body.append(tr);
+    });
+    if (!current.rows.length) { const tr = element('tr'); const td = element('td', 'subtle', '查询成功，没有匹配的行。'); td.colSpan = current.fields.length + 1; tr.append(td); body.append(tr); }
+    table.append(body); scroll.append(table); panel.append(scroll);
+    const footer = element('div', 'result-footer');
+    footer.append(element('span', '', current.totalRows > ROW_LIMIT ? `返回 ${current.totalRows.toLocaleString()} 行 · 仅展示、导出前 ${ROW_LIMIT.toLocaleString()} 行` : `共 ${current.totalRows.toLocaleString()} 行`));
+    if (current.rows.length > 100) {
+      const pages = Math.ceil(current.rows.length / 100);
+      const pagination = element('div', 'pagination');
+      const prev = button('‹', '', () => { page--; renderResults(); }); prev.disabled = page === 0; prev.setAttribute('aria-label', '上一页');
+      const next = button('›', '', () => { page++; renderResults(); }); next.disabled = page >= pages - 1; next.setAttribute('aria-label', '下一页');
+      pagination.append(prev, element('span', '', `${page + 1} / ${pages}`), next); footer.append(pagination);
+    }
+    panel.append(footer);
+  }
+  if (notices.length) panel.append(element('pre', 'notice', notices.join('\n')));
+}
+function renderPlan() {
+  const panel = $('plan-panel');
+  panel.replaceChildren();
+  if (!currentPlan) { emptyPanel(panel, '还没有执行计划', '选中一条 SQL，点击 EXPLAIN 或 ANALYZE。ANALYZE 按钮仅做只读分析。'); return; }
+  const plan = currentPlan;
+  const top = element('div', 'plan-top');
+  const metrics = element('div', 'plan-metrics');
+  for (const [label, value] of [['估算成本', plan.Plan['Total Cost']], ['规划时间', plan['Planning Time']], ['执行时间', plan['Execution Time']]] as const) {
+    if (value !== undefined) { const metric = element('span', '', label); metric.append(element('strong', '', label === '估算成本' ? String(value) : `${value} ms`)); metrics.append(metric); }
+  }
+  top.append(metrics, button(planJSON ? '查看计划树' : '查看 JSON', 'text-button', () => { planJSON = !planJSON; renderPlan(); }));
+  panel.append(top);
+  if (planJSON) panel.append(element('pre', 'plan-json', JSON.stringify(plan, null, 2)));
+  else {
+    const tree = element('div', 'plan-tree');
+    function nodeView(node: PlanNode): HTMLElement {
+      const details = element('details', 'plan-node'); details.open = true;
+      const summary = element('summary');
+      summary.append(element('strong', '', node['Node Type']), element('span', '', node['Index Name'] || node['Relation Name'] || ''));
+      const actual = node['Actual Rows'];
+      const loops = node['Actual Loops'];
+      const metrics = [`cost ${node['Total Cost'] ?? '—'}`, `rows ${node['Plan Rows'] ?? '—'}`];
+      if (actual !== undefined) metrics.push(`actual ${actual} × ${loops ?? 1}`, `${node['Actual Total Time']} ms`);
+      summary.append(element('span', '', metrics.join(' · '))); details.append(summary);
+      const metadata = Object.entries(node).filter(([key]) => !['Plans', 'Node Type', 'Relation Name', 'Index Name', 'Total Cost', 'Plan Rows', 'Actual Rows', 'Actual Total Time', 'Actual Loops'].includes(key));
+      const useful = metadata.filter(([key]) => ['Filter', 'Index Cond', 'Recheck Cond', 'Hash Cond', 'Merge Cond', 'Join Filter', 'Sort Key', 'Group Key'].includes(key));
+      if (useful.length) details.append(element('pre', 'plan-details', useful.map(([key, value]) => `${key}: ${cellText(value)}`).join('\n')));
+      if (metadata.length) {
+        const properties = element('details', 'node-properties');
+        properties.append(element('summary', '', '节点详情'), element('pre', 'plan-details', metadata.map(([key, value]) => `${key}: ${cellText(value)}`).join('\n')));
+        details.append(properties);
+      }
+      node.Plans?.forEach(child => details.append(nodeView(child)));
+      return details;
+    }
+    tree.append(nodeView(plan.Plan)); panel.append(tree);
+  }
+}
+function renderHistory() {
+  const panel = $('history-panel'); panel.replaceChildren();
+  if (!history.length) { emptyPanel(panel, '每一次实验，都有迹可循', '最近 30 次运行记录保存在当前浏览器。点击记录可载入 SQL，不会自动运行。'); return; }
+  const top = element('div', 'history-top');
+  top.append(element('span', '', `最近 ${history.length} 次 · 点击载入 SQL`), button('清空记录', 'text-button', () => {
+    history = []; try { localStorage.removeItem(HISTORY_KEY); } catch { toast('历史记录未能从本地存储删除。'); }
+    renderHistory();
+  }));
+  panel.append(top);
+  history.forEach(entry => {
+    const row = button('', 'history-row', () => { replaceSQL(entry.sql); showTab('results'); toast('SQL 已载入，点击运行执行。'); });
+    row.title = entry.sql.slice(0, 500);
+    row.append(element('span', entry.ok ? 'history-status' : 'history-status failed'), element('span', 'history-sql', entry.sql.replace(/\s+/g, ' ')), element('span', 'history-meta', `${entry.mode.toUpperCase()} · ${entry.elapsed.toFixed(1)} ms\n${new Date(entry.at).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}`));
+    panel.append(row);
+  });
+}
+function saveHistory(entry: HistoryEntry) {
+  if (entry.sql.length > 50_000) { toast('本次 SQL 较大，未加入历史记录；可保存为 SQL 文件。'); return; }
+  history.unshift(entry); history = history.slice(0, 30);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch { toast('历史记录未能保存，可使用“保存 SQL”下载。'); }
+  renderHistory();
+}
+
+async function run(mode: string, overrideSQL?: string) {
+  if (busy || !ready) return;
+  const selection = editor.state.selection.main;
+  const query = overrideSQL ?? (selection.empty ? editor.state.doc.toString() : editor.state.sliceDoc(selection.from, selection.to));
+  if (!query.trim()) { toast('请先输入 SQL。'); editor.focus(); return; }
+  saveDraft(); setBusy(true);
+  $('query-error').hidden = true;
+  $('execution-summary').textContent = '执行中…';
+  $('result-badge').hidden = true;
+  results = []; currentPlan = null; notices = []; page = 0;
+  emptyPanel($('results-panel'), '正在执行查询…', '数据库在独立进程中运行。');
+  renderPlan(); showTab(mode === 'run' ? 'results' : 'plan');
+  const started = performance.now();
+  try {
+    const execution = await db.call<Execution>('execute', {sql: query, mode}, {timeoutMs: Number(($('query-timeout') as HTMLSelectElement).value)});
+    results = execution.results; notices = execution.notices;
+    selectedResult = Math.max(0, results.length - 1);
+    currentPlan = results.map(planFrom).find(plan => plan !== null) ?? null;
+    $('execution-summary').textContent = `✓ ${execution.elapsed.toFixed(1)} ms`;
+    $('result-badge').textContent = String(results[selectedResult]?.totalRows ?? 0);
+    $('result-badge').hidden = false;
+    renderResults(); renderPlan();
+    if (currentPlan) showTab('plan');
+    saveHistory({sql: query, mode, at: new Date().toISOString(), elapsed: execution.elapsed, ok: true});
+    await refreshSchema();
+  } catch (error) {
+    const e = error as Error & {code?: string; detail?: string; hint?: string; position?: string};
+    const interrupted = e instanceof QueryInterruptedError;
+    $('execution-summary').textContent = interrupted ? (e.code === 'QUERY_TIMEOUT' ? '已到运行时限' : '已停止') : '执行失败';
+    emptyPanel($('results-panel'), interrupted ? '查询已停止，可以继续运行 SQL' : '这条 SQL 没有执行成功', interrupted ? '可调整运行时限后重试，或修改 SQL。' : '根据下方提示修改后再试一次。');
+    const panel = $('query-error'); panel.replaceChildren(element('strong', '', e.message));
+    if (interrupted) {
+      renderSchema(e.info.tables);
+      ready = true;
+      $('connection-error').hidden = true;
+      $('connection-status').textContent = db.mode === 'memory' ? '临时数据库已就绪' : '本地数据库已就绪';
+      $('connection-dot').className = 'connection-dot ready';
+      panel.append(element('p', '', '已恢复最近保存的数据；未完成的事务和会话设置已清除。本次 SQL 不会自动重试，多语句执行中已提交的内容请先查询确认。'));
+    } else {
+      const detail = [e.code && `SQLSTATE ${e.code}`, e.position && `位置 ${e.position}`, e.detail, e.hint].filter(Boolean).join('\n');
+      if (detail) panel.append(element('pre', '', detail));
+      if (e.code === '25P02' || e.message.includes('aborted')) panel.append(button('执行 ROLLBACK 恢复事务', '', () => void run('run', 'ROLLBACK;')));
+    }
+    panel.hidden = false;
+    saveHistory({sql: query, mode, at: new Date().toISOString(), elapsed: performance.now() - started, ok: false});
+    if (!db.connected) connectionError(e);
+  } finally { setBusy(false); }
+}
+
+$('run').addEventListener('click', () => void run('run'));
+$('stop-query').addEventListener('click', () => void db.cancel());
+$('explain').addEventListener('click', () => void run('explain'));
+$('analyze').addEventListener('click', () => void run('analyze'));
+$('retry').addEventListener('click', () => void connect(db.mode));
+$('memory-mode').addEventListener('click', () => void connect('memory'));
+$('refresh-schema').addEventListener('click', async () => { if (busy) return; setBusy(true); await refreshSchema(); setBusy(false); });
+$('save-sql').addEventListener('click', () => download(editor.state.doc.toString(), 'query.sql', 'text/plain;charset=utf-8'));
+$('import-sql').addEventListener('click', () => $('sql-file').click());
+$('sql-file').addEventListener('change', async event => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0]; if (!file) return;
+  try {
+    if (file.size > 1_000_000) throw Error('SQL 文件超过 1 MB，请拆分后导入。');
+    replaceSQL(await file.text()); toast('SQL 已导入，尚未执行。');
+  } catch (error) { toast((error as Error).message); }
+  finally { input.value = ''; }
+});
+$('reset').addEventListener('click', () => { if (!busy && ready) { const dialog = $('reset-dialog') as HTMLDialogElement; dialog.returnValue = ''; dialog.showModal(); } });
+$('reset-dialog').addEventListener('close', async () => {
+  const dialog = $('reset-dialog') as HTMLDialogElement;
+  if (dialog.returnValue !== 'reset' || busy || !ready) return;
+  setBusy(true);
+  try {
+    const info = await db.call('reset', {mode: db.mode});
+    renderSchema(info.tables);
+    results = []; currentPlan = null; notices = [];
+    renderResults(); renderPlan(); $('query-error').hidden = true; $('result-badge').hidden = true; $('execution-summary').textContent = '';
+    toast('数据库已重置，示例数据已恢复。');
+  } catch (error) { db.stop(); connectionError(error); }
+  finally { setBusy(false); }
+});
+window.addEventListener('pagehide', () => { saveDraft(); db.stop(); });
+window.addEventListener('pageshow', event => { if (event.persisted) { busy = false; void connect(db.mode); } });
+
+renderHistory();
+void connect();
