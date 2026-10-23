@@ -15,7 +15,7 @@ export async function initialize(db: PGlite) {
         INSERT INTO _playground.initialized VALUES (1)`);
     });
   }
-  await db.exec(`SET statement_timeout = '20s'; SET lock_timeout = '5s'; SET work_mem = '8MB';`);
+  await db.exec(`SET statement_timeout = '0'; SET lock_timeout = '5s'; SET work_mem = '8MB';`);
   return (await db.query<{ version: string }>("SELECT current_setting('server_version') AS version")).rows[0].version;
 }
 

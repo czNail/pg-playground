@@ -4,7 +4,6 @@
 
 目标地址：<https://cznail.github.io/pg-playground/>
 
-
 ## 功能
 
 - CodeMirror 编辑器：SQL 高亮、补全、选区运行、Ctrl / ⌘ + Enter。
@@ -49,7 +48,8 @@ npm run build
 - 数据目录 `idb://neil-pg-playground-v1` 对应 IndexedDB `/pglite/neil-pg-playground-v1`。重置只删除此数据库，不清理同源其他工具的数据，保留 SQL 草稿与历史记录。
 - 初始化标记与示例生成位于同一事务，刷新不会重复插入示例，也不会因用户删除示例表而自动重建。重置后才恢复示例。
 - 每条语句最多向页面返回、导出前 1,000 行，每页显示 100 行。查询仍可能在 Worker 中产生大量数据，请使用 LIMIT 限制大结果。
-- 设置 `statement_timeout=20s`、`lock_timeout=5s`，主线程另有 60 秒兜底终止。WASM 环境中 SQL 超时不作为唯一保障。终止后需要重连，部分完成的语句可能已提交。
+- 运行时限可选 5 秒、30 秒、60 秒（默认）、5 分钟或不限；运行中可点击“停止查询”。WASM 查询不能直接中断，因此由主线程终止 Worker 并自动恢复连接，全程保持持久化数据库锁，不会自动重试 SQL。
+- 停止后持久化模式重新打开已保存的数据库，临时模式恢复最近一次完成且不在事务中的快照。未完成事务和会话设置会清除；多语句中已提交的内容请先检查，避免重复写入。启动与保存各有两分钟保护时限，`lock_timeout=5s`。
 - EXPLAIN/ANALYZE 按钮使用单语句协议，拒绝多语句。ANALYZE 按钮使用只读事务，用户存在未结束事务时要求先 COMMIT / ROLLBACK。手工运行的 SQL 按原意执行，包括写入、显式事务及 EXPLAIN ANALYZE。
 - 显示耗时含浏览器和持久化开销，不代表服务器 PostgreSQL 性能。扩展能力以 PGlite 为准，不模拟服务端并行、多进程或真实磁盘 I/O。
 
@@ -67,4 +67,4 @@ npm run build
 
 ## 验证
 
-`tests/database.test.ts` 使用真实 PGlite，覆盖初始化幂等性、多语句、重复列名、结果上限、索引前后计划变化、只读分析、事务恢复及 CSV。HTTPS 正式站点已实测：SQL 查询与计划交互、刷新后的 IndexedDB 数据和 SQL 草稿恢复、第二标签页占用保护、数据库重置与共享主题保留。HTTP 本地预览另覆盖临时模式、CSV 下载及结果安全渲染。
+`tests/recovery.test.ts` 使用真实 PostgreSQL Worker 验证长查询超时、手动停止、自动重连、持久化与临时模式数据保留、事务回滚和锁保留。`tests/database.test.ts` 覆盖初始化幂等性、多语句、重复列名、结果上限、索引前后计划变化、只读分析、事务恢复及 CSV。HTTPS 正式站点已实测：SQL 查询与计划交互、刷新后的 IndexedDB 数据和 SQL 草稿恢复、第二标签页占用保护、数据库重置与共享主题保留。HTTP 本地预览另覆盖临时模式、CSV 下载及结果安全渲染。
