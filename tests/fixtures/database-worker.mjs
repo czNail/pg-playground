@@ -4,7 +4,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { createSession } from '../../src/worker-session.ts';
 import { testExtensions } from './extensions.ts';
 const handle = createSession(
-  (mode, checkpoint) => PGlite.create({dataDir: mode === 'memory' ? 'memory://' : workerData.directory, loadDataDir: checkpoint, extensions: testExtensions()}),
+  (mode, checkpoint, withPostGIS) => PGlite.create({dataDir: mode === 'memory' ? 'memory://' : workerData.directory, loadDataDir: checkpoint, extensions: testExtensions(withPostGIS)}),
   () => rm(workerData.directory, {recursive:true, force:true}),
   response => parentPort.postMessage(response)
 );

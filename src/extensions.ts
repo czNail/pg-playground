@@ -6,6 +6,7 @@ export interface ExtensionState {
   availableVersion: string | null;
   installedVersion: string | null;
   schema: string | null;
+  downloadable?: boolean;
 }
 const heapExample = `CREATE SCHEMA IF NOT EXISTS playground_examples;
 CREATE TABLE IF NOT EXISTS playground_examples.heap_items (
@@ -35,6 +36,37 @@ SELECT id, content, embedding <=> '[1,0,0]'::vector AS cosine_distance
 FROM playground_examples.vector_items
 ORDER BY embedding <=> '[1,0,0]'::vector
 LIMIT 3;`
+  },
+  {
+    name: 'postgis', label: 'PostGIS', category: '空间查询',
+    description: '空间类型、距离与范围查询、GiST 索引。首次启用下载约 19 MB 并重连；保留已提交数据，会话设置恢复默认。',
+    sql: `-- 请先在扩展面板启用 PostGIS，再运行本示例。
+SELECT PostGIS_Full_Version();
+
+CREATE SCHEMA IF NOT EXISTS playground_examples;
+CREATE TABLE IF NOT EXISTS playground_examples.places (
+  id INTEGER PRIMARY KEY, name TEXT, location geometry(Point, 4326)
+);
+INSERT INTO playground_examples.places VALUES
+  (1, '故宫', ST_SetSRID(ST_MakePoint(116.397, 39.918), 4326)),
+  (2, '天坛', ST_SetSRID(ST_MakePoint(116.407, 39.883), 4326)),
+  (3, '颐和园', ST_SetSRID(ST_MakePoint(116.273, 39.999), 4326))
+ON CONFLICT (id) DO NOTHING;
+CREATE INDEX IF NOT EXISTS places_location_gist
+ON playground_examples.places USING gist (location);
+
+-- geography 距离以米计；geometry(4326) 的坐标单位是度。
+SELECT id, name, ST_AsText(location) AS point,
+       round(ST_Distance(location::geography,
+         ST_SetSRID(ST_MakePoint(116.397, 39.908), 4326)::geography)) AS distance_m
+FROM playground_examples.places
+ORDER BY distance_m;
+
+-- ST_Intersects 可利用 GiST 索引；小表仍可能选择顺序扫描。
+-- 选中本条 SELECT 可比较执行计划。
+SELECT id, name
+FROM playground_examples.places
+WHERE ST_Intersects(location, ST_MakeEnvelope(116.39, 39.88, 116.42, 39.93, 4326));`
   },
   {
     name: 'pg_trgm', label: 'pg_trgm', category: '文本搜索',
@@ -118,7 +150,8 @@ export async function extensionStates(db: PGlite): Promise<ExtensionState[]> {
     LEFT JOIN pg_namespace n ON n.oid = e.extnamespace
     WHERE a.name = ANY($1::text[])`, [extensionCatalog.map(item => item.name)]);
   return extensionCatalog.map(item => result.rows.find(state => state.name === item.name) ?? {
-    name: item.name, availableVersion: null, installedVersion: null, schema: null
+    name: item.name, availableVersion: null, installedVersion: null, schema: null,
+    ...(item.name === 'postgis' ? {downloadable: true} : {})
   });
 }
 export async function enableExtensions(db: PGlite, names: readonly string[]) {

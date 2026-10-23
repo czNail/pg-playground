@@ -65,7 +65,7 @@
       <details class="labs-panel" id="labs-panel"><summary>引导实验 <span>可选 · 使用独立的实验表</span></summary><div class="labs-content"><p class="panel-note">默认工作台可直接使用初始数据验证自己的 SQL。这里的步骤仅载入 SQL，点击运行后才执行；准备 / 复位只重建对应实验表。</p><label class="lab-select-label">选择实验 <select id="lab-select" aria-label="选择引导实验"></select></label><div id="lab-content"></div></div></details>
       <details class="extensions-panel" id="extensions-panel">
         <summary><span>扩展</span><span id="extension-summary" role="status" aria-live="polite">连接后查看状态</span></summary>
-        <div class="extensions-toolbar"><p>按需启用，也可运行 CREATE EXTENSION。每个扩展都配有可直接载入的 SQL 示例。</p><button type="button" id="enable-all-extensions" data-db-action disabled>启用全部</button></div>
+        <div class="extensions-toolbar"><p>按需启用，每个扩展都配有 SQL 示例。PostGIS 首次请通过面板启用；其他扩展也可直接运行 CREATE EXTENSION。</p><button type="button" id="enable-all-extensions" data-db-action disabled>启用全部</button></div>
         <p id="extension-feedback" class="extension-feedback" role="status" aria-live="polite" hidden></p>
         <div id="extension-list" class="extension-grid"></div>
         <p class="extensions-note">启用状态随数据库保存；重置后需重新启用。示例表建在 playground_examples 中，载入示例后点击“运行 SQL”执行。内部结构扩展观察的是当前浏览器中的实例。</p>

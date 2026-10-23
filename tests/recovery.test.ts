@@ -25,10 +25,11 @@ for (const mode of ['persistent', 'memory']) {
     const run = (sql: string, timeoutMs = 0) => connection.call<Execution>('execute', {sql, mode:'run'}, {timeoutMs});
     try {
       const info = await connection.start(mode);
-      assert.ok(info.extensions.every(item => item.availableVersion && !item.installedVersion));
+      assert.ok(info.extensions.every(item => (item.availableVersion || item.downloadable) && !item.installedVersion));
       await connection.call('enable-extensions', {names: extensionCatalog.map(item => item.name)});
       await run("CREATE TABLE recovery_vectors (id int, embedding vector(3)); INSERT INTO recovery_vectors VALUES (1, '[1,0,0]'); CREATE INDEX recovery_vector_hnsw ON recovery_vectors USING hnsw (embedding vector_l2_ops);");
       await run('CREATE TABLE recovery_check (value int); INSERT INTO recovery_check VALUES (42);');
+      await run('CREATE TABLE recovery_places (id int PRIMARY KEY, location geometry(Point, 4326)); INSERT INTO recovery_places VALUES (1, ST_SetSRID(ST_MakePoint(116.397, 39.918), 4326)); CREATE INDEX recovery_places_gist ON recovery_places USING gist(location);');
       // A short timer starts after worker startup, and never replays the timed-out SQL.
       await assert.rejects(run('SELECT pg_sleep(1000); INSERT INTO recovery_check VALUES (99);', 100), error => {
         assert.ok(error instanceof QueryInterruptedError);
@@ -40,6 +41,7 @@ for (const mode of ['persistent', 'memory']) {
       assert.equal(connection.connected, true);
       assert.deepEqual((await run("SELECT id FROM recovery_vectors ORDER BY embedding <-> '[1,0,0]'::vector LIMIT 1")).results[0].rows, [[1]]);
       assert.deepEqual((await run('SELECT value FROM recovery_check')).results[0].rows, [[42]]);
+      assert.deepEqual((await run('SELECT ST_AsText(location) FROM recovery_places')).results[0].rows, [['POINT(116.397 39.918)']]);
       // Manual stop also works with no time limit, and rolls back an open transaction.
       await run('BEGIN; INSERT INTO recovery_check VALUES (7);');
       const running = new Promise<void>(resolve => { connection.onActivity = state => { if (state === 'running') resolve(); }; });
@@ -52,7 +54,7 @@ for (const mode of ['persistent', 'memory']) {
       assert.ok((await connection.call<ExtensionState[]>('extensions')).every(item => item.installedVersion));
       assert.deepEqual((await run("SELECT id FROM recovery_vectors ORDER BY embedding <-> '[1,0,0]'::vector LIMIT 1")).results[0].rows, [[1]]);
       const reset = await connection.call('reset', {mode});
-      assert.ok(reset.extensions.every((item: ExtensionState) => item.availableVersion && !item.installedVersion));
+      assert.ok(reset.extensions.every((item: ExtensionState) => (item.availableVersion || item.downloadable) && !item.installedVersion));
       assert.ok(!reset.tables.some((table: {name:string}) => table.name === 'recovery_vectors'));
       await connection.call('enable-extensions', {names:['vector']});
       assert.deepEqual((await run("SELECT '[1,0,0]'::vector <-> '[1,0,0]'::vector AS distance")).results[0].rows, [[0]]);

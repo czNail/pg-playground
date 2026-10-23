@@ -199,9 +199,9 @@ function renderSchema(tables: Table[]) {
 function updateExtensionControls() {
   document.querySelectorAll<HTMLButtonElement>('[data-enable-extension]').forEach(node => {
     const state = extensions.find(item => item.name === node.dataset.enableExtension);
-    node.disabled = busy || !ready || !state?.availableVersion || !!state.installedVersion;
+    node.disabled = busy || !ready || !(state?.availableVersion || state?.downloadable) || !!state.installedVersion;
   });
-  $('enable-all-extensions').toggleAttribute('disabled', busy || !ready || !extensions.some(item => item.availableVersion && !item.installedVersion));
+  $('enable-all-extensions').toggleAttribute('disabled', busy || !ready || !extensions.some(item => (item.availableVersion || item.downloadable) && !item.installedVersion));
   document.querySelectorAll<HTMLButtonElement>('[data-extension-example]').forEach(node => { node.disabled = busy; });
 }
 function renderExtensions(states: ExtensionState[]) {
@@ -216,7 +216,7 @@ function renderExtensions(states: ExtensionState[]) {
     const heading = element('div', 'extension-heading');
     heading.append(element('h3', '', item.label), element('span', 'extension-category', item.category));
     const version = element('span', state?.installedVersion ? 'extension-version enabled' : 'extension-version',
-      state?.installedVersion ? `v${state.installedVersion} · ${state.schema}` : state?.availableVersion ? `可用版本 ${state.availableVersion}` : '连接后查看版本');
+      state?.installedVersion ? `v${state.installedVersion} · ${state.schema}` : state?.availableVersion ? `可用版本 ${state.availableVersion}` : state?.downloadable ? '未加载 · 首次启用下载约 19 MB' : '连接后查看版本');
     const actions = element('div', 'extension-actions');
     const enable = button(state?.installedVersion ? '已启用' : '启用', '', () => void installExtensions([item.name]));
     enable.dataset.dbAction = ''; enable.dataset.enableExtension = item.name;
@@ -227,7 +227,7 @@ function renderExtensions(states: ExtensionState[]) {
       if (state?.schema && state.schema !== 'public') sql = `-- 将扩展所在 schema 加入查询路径。\nSET search_path TO ${quoteIdentifier(state.schema)}, public, pg_catalog;\n\n` + sql;
       replaceSQL(sql);
       $('editor').scrollIntoView({behavior: 'smooth', block: 'center'});
-      toast(`${item.label} 示例已载入，尚未执行。`);
+      toast(item.name === 'postgis' && state?.downloadable ? '示例已载入，请先在扩展面板启用 PostGIS。' : `${item.label} 示例已载入，尚未执行。`);
     });
     example.dataset.extensionExample = item.name;
     example.setAttribute('aria-label', `查看 ${item.label} 示例`);
@@ -250,7 +250,9 @@ async function installExtensions(names: string[]) {
   if (busy || !ready || !names.length) return;
   setBusy(true);
   const feedback = $('extension-feedback');
-  feedback.hidden = false; feedback.classList.remove('error'); feedback.textContent = '正在启用扩展…';
+  feedback.hidden = false; feedback.classList.remove('error');
+  feedback.textContent = names.includes('postgis') && extensions.find(item => item.name === 'postgis')?.downloadable
+    ? '正在下载 PostGIS 并重新连接数据库，请稍候…' : '正在启用扩展…';
   try {
     const info = await db.call<{tables: Table[]; extensions: ExtensionState[]}>('enable-extensions', {names});
     renderSchema(info.tables); renderExtensions(info.extensions);
@@ -260,7 +262,7 @@ async function installExtensions(names: string[]) {
     if (!db.connected) connectionError(error);
   } finally { setBusy(false); }
 }
-$('enable-all-extensions').addEventListener('click', () => void installExtensions(extensions.filter(item => item.availableVersion && !item.installedVersion).map(item => item.name)));
+$('enable-all-extensions').addEventListener('click', () => void installExtensions(extensions.filter(item => (item.availableVersion || item.downloadable) && !item.installedVersion).map(item => item.name)));
 async function connect(mode = 'persistent') {
   if (busy) return;
   ready = false;

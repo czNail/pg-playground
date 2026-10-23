@@ -21,11 +21,14 @@ test('backup checksums and format reject truncation, tampering and incompatible 
 
 for (const mode of ['memory','persistent']) test(`${mode}: complete backup, restore, rollback and interrupted restore recovery`, {timeout:90_000}, async t => {
   const directory = await mkdtemp(join(tmpdir(),'pg-backup-'));
-  let journal: Blob | undefined, failOnce = false, failErase = false;
+  let journal: Blob | undefined, failOnce = false, failErase = false, failPostGIS = false;
+  const resourceLoads: boolean[] = [];
   const pending = new Map<number, {resolve:(value:any)=>void; reject:(error:Error)=>void}>(); let id = 0;
-  const create = async (requestedMode: string, checkpoint?: Blob) => {
+  const create = async (requestedMode: string, checkpoint?: Blob, withPostGIS = false) => {
+    resourceLoads.push(withPostGIS);
+    if (withPostGIS && failPostGIS) { failPostGIS = false; throw Error('simulated PostGIS download failure'); }
     if (requestedMode === mode && checkpoint && failOnce) { failOnce = false; throw Error('simulated restore failure'); }
-    return PGlite.create({dataDir:requestedMode === 'memory' ? 'memory://' : directory,loadDataDir:checkpoint,extensions:testExtensions()});
+    return PGlite.create({dataDir:requestedMode === 'memory' ? 'memory://' : directory,loadDataDir:checkpoint,extensions:testExtensions(withPostGIS)});
   };
   const makeSession = () => createSession(create, async () => { if (failErase) throw Error('simulated interruption'); await rm(directory,{recursive:true,force:true}); }, (response:WorkerResponse) => {
     if (response.phase) return;
@@ -36,15 +39,36 @@ for (const mode of ['memory','persistent']) test(`${mode}: complete backup, rest
   const call = (method: string, payload: object = {}):Promise<any> => new Promise((resolve,reject)=>{const next=++id; pending.set(next,{resolve,reject}); handle({id:next,method,payload});});
   const run = (sql:string) => call('execute',{sql,mode:'run'});
   try {
-    await call('init',{mode});
-    await call('enable-extensions',{names:['vector']});
+    const initial = await call('init',{mode});
+    assert.equal(initial.extensions.find((extension:any)=>extension.name==='postgis').downloadable, true);
+    assert.ok(resourceLoads.every(loaded=>!loaded), 'ordinary startup does not load PostGIS');
+    await run('CREATE TABLE optional_check (value int); INSERT INTO optional_check VALUES (42);');
+    await t.test('optional loading protects transactions and temporary tables and recovers from failed downloads', async()=>{
+      await run('BEGIN; INSERT INTO optional_check VALUES (99);');
+      await assert.rejects(call('enable-extensions',{names:['postgis']}),/COMMIT/);
+      await run('ROLLBACK; CREATE TEMP TABLE unsaved_temp(value int); INSERT INTO unsaved_temp VALUES (7);');
+      await assert.rejects(call('enable-extensions',{names:['postgis']}),/临时表/);
+      assert.deepEqual((await run('SELECT value FROM unsaved_temp')).results[0].rows,[[7]]);
+      await run('DROP TABLE unsaved_temp;');
+      assert.ok(resourceLoads.every(loaded=>!loaded));
+      failPostGIS=true;
+      await assert.rejects(call('enable-extensions',{names:['postgis']}),/可重试启用/);
+      assert.deepEqual((await run('SELECT value FROM optional_check')).results[0].rows,[[42]]);
+      assert.equal((await call('extensions')).find((extension:any)=>extension.name==='postgis').installedVersion,null);
+    });
+    await call('enable-extensions',{names:['vector', 'postgis']});
+    assert.deepEqual((await run('SELECT value FROM optional_check')).results[0].rows,[[42]]);
     await run("CREATE TABLE backup_vectors(id int PRIMARY KEY, embedding vector(3)); INSERT INTO backup_vectors VALUES (1,'[1,0,0]'); CREATE INDEX backup_hnsw ON backup_vectors USING hnsw(embedding vector_l2_ops);");
+    await run('CREATE TABLE backup_places(id int PRIMARY KEY, location geometry(Point, 4326)); INSERT INTO backup_places VALUES (1, ST_SetSRID(ST_MakePoint(116.397, 39.918), 4326)); CREATE INDEX backup_places_gist ON backup_places USING gist(location);');
     const backup:Blob = await call('backup');
     await run('INSERT INTO backup_vectors VALUES (2,\'[0,1,0]\');');
     await t.test('restore preserves extension data, indexes and full row sets',async()=>{
       const info = await call('restore',{file:backup});
       assert.ok(info.tables.some((table:any)=>table.name==='backup_vectors' && table.indexes.some((index:any)=>index.name==='backup_hnsw')));
       assert.ok(info.extensions.find((extension:any)=>extension.name==='vector').installedVersion);
+      assert.ok(info.extensions.find((extension:any)=>extension.name==='postgis').installedVersion);
+      assert.ok(info.tables.some((table:any)=>table.name==='backup_places' && table.indexes.some((index:any)=>index.name==='backup_places_gist')));
+      assert.deepEqual((await run('SELECT ST_AsText(location) FROM backup_places')).results[0].rows,[['POINT(116.397 39.918)']]);
       assert.deepEqual((await run('SELECT id FROM backup_vectors')).results[0].rows,[[1]]);
       assert.equal(journal,undefined);
     });

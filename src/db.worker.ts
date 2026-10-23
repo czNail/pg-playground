@@ -13,14 +13,19 @@ async function checked(url: string) {
   if (!response.ok) throw Error(`数据库资源加载失败（${response.status}），请刷新重试。`);
   return response;
 }
-async function create(mode: string, checkpoint?: Blob) {
+async function create(mode: string, checkpoint?: Blob, withPostGIS = false) {
   const [pgliteWasmModule, initdbWasmModule, fsBundle] = await Promise.all([
     checked(wasmURL).then(r => r.arrayBuffer()).then(b => WebAssembly.compile(b)),
     checked(initURL).then(r => r.arrayBuffer()).then(b => WebAssembly.compile(b)),
     checked(dataURL).then(r => r.blob())
   ]);
-  return PGlite.create({loadDataDir: checkpoint, dataDir: mode === 'memory' ? 'memory://' : 'idb://' + DATABASE_NAME,
-    pgliteWasmModule, initdbWasmModule, fsBundle, extensions: extensionBundles(self.location.href)});
+  const db = await PGlite.create({loadDataDir: checkpoint, dataDir: mode === 'memory' ? 'memory://' : 'idb://' + DATABASE_NAME,
+    pgliteWasmModule, initdbWasmModule, fsBundle, extensions: extensionBundles(self.location.href, withPostGIS)});
+  if (withPostGIS && !(await db.query("SELECT 1 FROM pg_available_extensions WHERE name = 'postgis'")).rows.length) {
+    await db.close();
+    throw Error('PostGIS 资源加载失败，请检查网络后重试启用。');
+  }
+  return db;
 }
 async function erase() {
   await new Promise<void>((resolve, reject) => {
