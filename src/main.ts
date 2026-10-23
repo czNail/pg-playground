@@ -259,7 +259,7 @@ async function installExtensions(names: string[]) {
     feedback.textContent = '扩展已启用。可查看示例，或直接在编辑器中运行 SQL。';
   } catch (error) {
     feedback.classList.add('error'); feedback.textContent = (error as Error).message;
-    if (!db.connected) connectionError(error);
+    if (!db.connected || (error as {code?: string}).code === 'DATABASE_UNAVAILABLE') connectionError(error);
   } finally { setBusy(false); }
 }
 $('enable-all-extensions').addEventListener('click', () => void installExtensions(extensions.filter(item => (item.availableVersion || item.downloadable) && !item.installedVersion).map(item => item.name)));
