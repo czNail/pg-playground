@@ -1,0 +1,7 @@
+node_modules/
+dist/
+public/site-ui/
+public/favicon.svg
+artifacts/
+.openai/
+*.tsbuildinfo

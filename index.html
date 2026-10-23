@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#e8ece5" />
+    <meta name="description" content="打开浏览器就能运行 PostgreSQL。编写 SQL、探索表结构、比较执行计划，数据保存在你的浏览器里。" />
+    <title>PostgreSQL 实验台 · 木匠钉子</title>
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <link rel="stylesheet" href="/vendor/site-ui/tokens.css" />
+    <link rel="stylesheet" href="/vendor/site-ui/shell.css" />
+    <script src="%BASE_URL%site-ui/runtime.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#editor">跳到 SQL 编辑器</a>
+    <!-- SITE_HEADER -->
+    <main class="app-shell">
+      <section class="page-heading" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> PG / PLAYGROUND <span class="version-tag">01</span></p>
+          <h1 id="page-title">PostgreSQL 实验台<span class="title-dot">.</span></h1>
+          <p class="intro">写一条 SQL，看看数据库如何回答。<span>无需安装，打开即用。</span></p>
+        </div>
+        <div class="connection"><span class="connection-dot" id="connection-dot"></span><div><strong id="connection-status" role="status" aria-live="polite">正在启动数据库…</strong><small id="engine-version">PGlite · 浏览器本地运行</small></div></div>
+      </section>
+
+      <div id="connection-error" class="connection-error" hidden>
+        <p id="connection-error-text" role="alert"></p>
+        <div><button type="button" id="retry">重试连接</button><button type="button" id="memory-mode">使用临时模式</button></div>
+      </div>
+
+      <section class="workspace" aria-label="SQL 工作台">
+        <aside class="sidebar" aria-label="数据库与示例">
+          <div class="sidebar-heading"><span>数据库</span><span class="local-badge">LOCAL</span></div>
+          <div class="database-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg><div><strong>playground</strong><small id="storage-mode">保存在当前浏览器</small></div></div>
+          <div class="section-label"><span>表与视图 <span id="table-count" class="count">—</span></span><button type="button" id="refresh-schema" class="icon-button" title="刷新表结构" aria-label="刷新表结构" data-db-action disabled>↻</button></div>
+          <div id="schema-list" class="schema-list"><p class="subtle loading-copy">正在加载表结构…</p></div>
+          <div class="section-label example-label"><span>从一个示例开始</span><span class="small-arrow">↙</span></div>
+          <div id="examples" class="example-list"></div>
+          <div class="sidebar-bottom"><span class="local-dot"></span><span>你的数据，只在你的浏览器。</span></div>
+        </aside>
+
+        <div class="workbench">
+          <section class="editor-panel" aria-label="SQL 编辑器">
+            <div class="editor-heading"><div class="file-tab"><span class="code-symbol">⌘</span><span>query.sql</span><span id="draft-indicator" class="saved-dot" title="草稿自动保存"></span></div><div class="file-actions"><button type="button" id="import-sql" class="text-button">导入 SQL</button><button type="button" id="save-sql" class="text-button">保存 SQL</button></div></div>
+            <div id="editor" aria-label="SQL 编辑器"></div>
+            <div class="editor-footer"><span id="editor-position">Ln 1, Col 1</span><span>PostgreSQL <span class="separator">/</span> UTF-8</span></div>
+            <div class="query-toolbar"><div class="plan-actions"><button type="button" id="explain" data-db-action disabled title="估算执行计划，不执行查询">EXPLAIN</button><button type="button" id="analyze" data-db-action disabled title="在只读事务中执行查询并显示实际执行计划">ANALYZE <span class="button-plus">↗</span></button></div><div class="run-actions"><kbd class="run-shortcut">Ctrl / ⌘ ↵</kbd><button type="button" id="run" class="primary-button" data-db-action disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 3 10 7-10 7Z" fill="currentColor"/></svg><span id="run-label">运行 SQL</span></button></div></div>
+          </section>
+
+          <section class="output-panel" aria-label="查询输出">
+            <div class="output-heading"><div class="output-tabs" role="tablist" aria-label="查询输出类型"><button type="button" id="tab-results" role="tab" aria-selected="true" aria-controls="results-panel" tabindex="0">查询结果 <span id="result-badge" class="count" hidden>0</span></button><button type="button" id="tab-plan" role="tab" aria-selected="false" aria-controls="plan-panel" tabindex="-1">执行计划</button><button type="button" id="tab-history" role="tab" aria-selected="false" aria-controls="history-panel" tabindex="-1">历史记录</button></div><span id="execution-summary" class="execution-summary" role="status" aria-live="polite"></span></div>
+            <div id="results-panel" role="tabpanel" aria-labelledby="tab-results" tabindex="0"><div class="empty-state"><div class="empty-code">SELECT <span>*</span> FROM possibilities;</div><strong>从第一条查询开始</strong><p>左侧选一个示例，或直接写下你的 SQL。<br />点击“运行 SQL”，结果就会出现在这里。</p><span class="empty-label">1,000 位客户 · 20,000 条订单 · 已为你准备好</span></div></div>
+            <div id="plan-panel" role="tabpanel" aria-labelledby="tab-plan" tabindex="0" hidden><div class="empty-state"><div class="empty-code">EXPLAIN <span>your_query</span>;</div><strong>看看查询背后发生了什么</strong><p>EXPLAIN 显示估算计划；ANALYZE 显示实际执行。<br />ANALYZE 按钮使用只读事务，写入语句会被拒绝。</p></div></div>
+            <div id="history-panel" role="tabpanel" aria-labelledby="tab-history" tabindex="0" hidden></div>
+            <div id="query-error" class="query-error" role="alert" hidden></div>
+          </section>
+        </div>
+      </section>
+
+      <div class="workspace-footnote"><p><span class="local-dot"></span><span id="persistence-note">数据库、SQL 草稿和历史记录保存在当前浏览器；清理网站数据会将它们删除。</span></p><button type="button" id="reset" class="text-button danger-text" data-db-action disabled>重置数据库</button></div>
+      <details class="help"><summary>关于这个实验台 <span>使用提示与边界</span></summary><div class="help-content"><p><strong>真实的 SQL，独立的本地环境。</strong>基于 PGlite / WebAssembly，支持 PostgreSQL 的查询、索引、事务和执行计划。每位访客的数据独立，不会自动同步到其他设备。</p><p><strong>运行与分析。</strong>支持多条 SQL 和选区执行。EXPLAIN / ANALYZE 每次分析一条语句；ANALYZE 按钮仅做只读分析。手工输入的 SQL 按原意执行，包括 EXPLAIN ANALYZE 写入语句。事务出错时可执行 ROLLBACK 恢复。</p><p><strong>结果与性能。</strong>每条语句最多展示、导出前 1,000 行，结果按每页 100 行浏览。运行耗时包含浏览器与本地存储开销，适合学习计划结构，不代表服务器 PostgreSQL 的性能。操作超过 60 秒会停止数据库进程，重连后请检查已完成语句的结果。</p><p><strong>本地保存。</strong>同一浏览器一次允许一个标签页使用持久化数据库。临时模式的数据在页面关闭后消失，不会覆盖本地数据库。可导入、保存 SQL 文件；CSV 导出只包含当前所选结果集的前 1,000 行。</p><a href="https://github.com/czNail/pg-playground" target="_blank" rel="noopener noreferrer">查看源码 ↗</a><a href="https://pglite.dev/docs/" target="_blank" rel="noopener noreferrer">PGlite 文档 ↗</a></div></details>
+    </main>
+    <!-- SITE_FOOTER -->
+    <dialog id="reset-dialog" aria-labelledby="reset-title"><form method="dialog"><span class="dialog-kicker">重新开始</span><h2 id="reset-title">重置这个实验台？</h2><p>将删除本实验台中所有自建表、数据和索引，并重新生成示例数据。SQL 草稿与历史记录会保留。</p><p class="subtle">此操作无法撤销，只影响本实验台的数据库。</p><div class="dialog-actions"><button value="cancel">取消</button><button value="reset" class="danger-button">确认重置</button></div></form></dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <input type="file" id="sql-file" accept=".sql,.txt,text/plain" hidden />
+    <noscript><p class="no-script">这个实验台需要启用 JavaScript 才能在浏览器中运行 PostgreSQL。</p></noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

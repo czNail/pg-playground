@@ -1,0 +1,32 @@
+{
+  "name": "pg-playground",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/prepare-site-ui.mjs",
+    "dev": "vite --host 0.0.0.0 --port 4173 --strictPort",
+    "build": "npm run check:site-ui && node scripts/prepare-site-ui.mjs && tsc --noEmit && vite build",
+    "check": "tsc --noEmit",
+    "check:site-ui": "node scripts/sync-site-ui.mjs",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "preview": "vite preview --host 0.0.0.0 --port 4173 --strictPort"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.11",
+    "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.0",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/autocomplete": "^6.18.7",
+    "@lezer/highlight": "^1.2.1",
+    "codemirror": "6.0.2"
+  },
+  "devDependencies": {
+    "vite": "8.3.5",
+    "typescript": "^5.9.3",
+    "tsx": "^4.20.0",
+    "@types/node": "^24.0.0"
+  }
+}

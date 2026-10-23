@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "PostgreSQL 实验台",
+  "description": "在浏览器里运行 SQL、探索表结构、比较执行计划，数据保存在本地。",
+  "label": "数据库工具",
+  "tags": ["PostgreSQL", "PGlite", "本地运行"],
+  "icon": "./assets/homepage-icon.svg",
+  "tool": {
+    "url": "https://cznail.github.io/pg-playground/",
+    "subtitle": "打开即用的 PostgreSQL 实验环境",
+    "features": ["SQL 编辑器", "执行计划", "本地保存"],
+    "status": "available"
+  }
+}
