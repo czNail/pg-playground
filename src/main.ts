@@ -45,7 +45,7 @@ let toastTimer: ReturnType<typeof setTimeout>;
 let history: HistoryEntry[] = [];
 let storedDraft: string | null = null;
 let draftTimer: ReturnType<typeof setTimeout>;
-const planViewer = new PlanViewer($('plan-panel'), toast, () => showTab('plan'));
+const planViewer = new PlanViewer($('plan-panel'), toast, () => { showTab('plan'); $('execution-summary').textContent = '外部计划 · 未执行 SQL'; });
 let cellValue = '';
 $('copy-cell').addEventListener('click', () => void copyText(cellValue, toast));
 try {
@@ -506,7 +506,7 @@ function renderLab() {
   content.append(steps);
 }
 labSelect.addEventListener('change', renderLab); renderLab();
-installDataTools({db, busy: () => busy, ready: () => ready, setBusy, refresh: refreshSchema, replaceSQL,
+installDataTools({db, busy: () => busy, ready: () => ready, setBusy, refresh: refreshSchema, replaceSQL, failed: connectionError,
   restored(info) {
     renderSchema(info.tables); renderExtensions(info.extensions);
     results = []; currentPlan = null; notices = []; planViewer.clear();

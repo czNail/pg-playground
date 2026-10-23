@@ -67,7 +67,10 @@ for (const mode of ['memory','persistent']) test(`${mode}: complete backup, rest
       });
       await t.test('a replacement interrupted after closing the database recovers on next startup',async()=>{
         failErase=true;
-        await assert.rejects(call('restore',{file:backup}),/interruption/);
+        await assert.rejects(call('restore',{file:backup}), error => {
+          assert.equal((error as Error & {code:string}).code, 'DATABASE_UNAVAILABLE');
+          assert.match((error as Error).message, /重试连接/); return true;
+        });
         assert.ok(journal); failErase=false;
         handle=makeSession(); await call('init',{mode});
         assert.deepEqual((await run('SELECT id FROM backup_vectors ORDER BY id')).results[0].rows,[[1],[3]]);

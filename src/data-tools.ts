@@ -8,6 +8,7 @@ import { el, downloadFile } from './ui';
 export function installDataTools(hooks: {
   db: DatabaseClient; busy: () => boolean; ready: () => boolean;
   setBusy: (value: boolean) => void; refresh: () => Promise<void>;
+  failed: (error: Error) => void;
   restored: (info: BootInfo) => void; replaceSQL: (sql: string) => void;
 }) {
   const $ = (id: string) => document.getElementById(id)!;
@@ -130,7 +131,11 @@ export function installDataTools(hooks: {
       const info = await hooks.db.call<BootInfo>('restore', {file: selectedBackup});
       hooks.restored(info); restoreDialog.close(); selectedBackup = null;
       message('数据库已恢复。表、数据、索引和扩展来自备份；编辑器草稿和历史记录保持原样。');
-    } catch (e) { restoreError.hidden = false; restoreError.textContent = (e as Error).message; await hooks.refresh(); }
+    } catch (e) {
+      const error = e as Error & {code?: string};
+      if (error.code === 'DATABASE_UNAVAILABLE') { restoreDialog.close(); hooks.failed(error); message(error.message, true); }
+      else { restoreError.hidden = false; restoreError.textContent = error.message; await hooks.refresh(); }
+    }
     finally { hooks.setBusy(false); restoreConfirm.disabled = false; $('restore-status').textContent = ''; }
   });
   restoreDialog.addEventListener('cancel', event => { if (hooks.busy()) event.preventDefault(); });

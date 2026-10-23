@@ -85,7 +85,8 @@ export function createSession(
         // A batch may have committed statements before a later statement failed.
         let checkpoint: Blob | undefined;
         try { checkpoint = await snapshot(); } catch { /* Retain the last valid recovery point. */ }
-        send({id, checkpoint, error: {message: e.message || String(error), code: e.code, detail: e.detail, hint: e.hint, position: e.position}});
+        const unavailable = method === 'restore' && !db;
+        send({id, checkpoint, error: {message: unavailable ? '数据库恢复尚未完成，请重试连接以恢复原数据库：' + e.message : e.message || String(error), code: unavailable ? 'DATABASE_UNAVAILABLE' : e.code, detail: e.detail, hint: e.hint, position: e.position}});
       }
     });
   };
