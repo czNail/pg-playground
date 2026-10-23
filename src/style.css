@@ -258,3 +258,68 @@ dialog p { font-size: 13px; color: var(--site-muted); line-height: 1.9; }
   .extensions-toolbar { align-items: flex-start; padding-inline: 12px; }
   .extensions-note { padding-inline: 12px; }
 }
+
+/* Local workbench tools share the site's existing appearance tokens. */
+.seed-note { margin: 10px 5px 0; font-size: 10px; line-height: 1.8; color: var(--site-muted); }
+.schema-estimate, .schema-default { display: block; margin: 4px 8px; font-size: 10px; color: var(--site-muted); overflow-wrap: anywhere; }
+.schema-properties { margin: 6px 5px; border-top: 1px solid var(--site-border); padding-top: 5px; }
+.schema-properties summary { font-size: 11px; cursor: pointer; overflow-wrap: anywhere; }
+.schema-property { margin: 5px 0 5px 7px; }
+.schema-property pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 10px/1.7 var(--site-font-mono); margin: 5px 0; }
+.schema-property button { font-size: 10px; padding: 2px 0; }
+.table-column { flex-wrap: wrap; }
+.tool-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tool-row button { font-size: 11px; padding: 6px 10px; }
+.data-toolbar { border: 1px solid var(--site-border); border-radius: var(--site-radius-card); padding: 12px 16px; background: var(--site-surface); }
+.data-toolbar>span { font-weight: 600; font-size: 12px; margin-right: 5px; }
+.data-toolbar>small { color: var(--site-muted); font-size: 10px; margin-left: auto; }
+.data-feedback { border: 1px solid var(--site-border); border-radius: 6px; padding: 10px 14px; color: var(--site-accent); background: var(--site-accent-soft); font-size: 12px; }
+.data-feedback.error, .inline-error { color: var(--site-danger); background: var(--site-danger-soft); }
+.inline-error { padding: 9px 12px; border-radius: 5px; overflow-wrap: anywhere; font-size: 12px; }
+.labs-panel { border: 1px solid var(--site-border); border-radius: var(--site-radius-card); background: var(--site-surface); margin-top: 10px; }
+.labs-panel>summary { padding: 14px 18px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.labs-panel>summary>span { margin-left: 12px; color: var(--site-muted); font-size: 11px; font-weight: 400; }
+.labs-content { padding: 0 18px 18px; }
+.lab-select-label { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; }
+#lab-content h3 { font-size: 13px; margin: 15px 0 5px; }
+.lab-steps { margin-top: 12px; }
+.panel-note { font-size: 11px; color: var(--site-muted); line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.plan-toolbar { padding: 12px 15px 0; }
+#plan-panel>.panel-note { margin: 10px 15px; }
+.comparison-summary { margin: 12px 15px; overflow: auto; border: 1px solid var(--site-border); border-radius: 6px; }
+.comparison-summary>.panel-note { padding: 0 12px; }
+.plan-comparison { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 0 15px 15px; }
+.plan-single { padding: 0 15px 15px; }
+.plan-capture { min-width: 0; border: 1px solid var(--site-border); border-radius: 7px; overflow: hidden; }
+.plan-capture h3 { margin: 12px 12px 3px; font-size: 13px; }
+.capture-meta { font-size: 10px; color: var(--site-muted); margin: 0 12px 9px; overflow-wrap: anywhere; }
+.capture-sql { padding: 0 12px 8px; font-size: 11px; }
+.capture-sql summary { cursor: pointer; color: var(--site-accent); }
+.plan-capture>.plan-metrics { padding: 5px 12px 10px; flex-wrap: wrap; gap: 15px; }
+.plan-capture>.plan-tree { padding: 12px; overflow-x: auto; }
+.plan-capture .plan-node { min-width: 0; }
+.plan-capture .plan-node>summary { flex-wrap: wrap; overflow-wrap: anywhere; }
+.plan-capture .plan-node>summary>span:last-child { width: 100%; font-size: 10px; }
+.plan-capture pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.estimate-warning { color: var(--site-accent); background: var(--site-accent-soft); padding: 6px 9px; margin: 5px 0; font-size: 10px; }
+.column-type { display: block; font-weight: 400; color: var(--site-muted); font-size: 9px; margin-top: 2px; }
+.inspect-cell { display: block; max-width: 340px; border: 0; border-radius: 3px; padding: 1px 3px; margin: -1px -3px; font: inherit; line-height: inherit; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; color: inherit; }
+.null-cell .inspect-cell { font-style: italic; }
+.cell-content { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 55vh; overflow: auto; border: 1px solid var(--site-border); background: var(--site-bg); border-radius: 6px; padding: 14px; font: 12px/1.8 var(--site-font-mono); }
+.wide-dialog { max-width: 850px; max-height: calc(100dvh - 40px); overflow: auto; }
+#restore-dialog { max-height: calc(100dvh - 40px); overflow: auto; }
+dialog label { font-size: 12px; color: var(--site-muted); }
+dialog textarea { display: block; width: 100%; resize: vertical; min-height: 70px; margin: 6px 0 12px; padding: 10px; font: 12px/1.7 var(--site-font-mono); color: var(--site-text); background: var(--site-bg); border: 1px solid var(--site-border); border-radius: 5px; }
+select, .csv-options input[type="text"], .csv-preview-table input { color: var(--site-text); background: var(--site-bg); border: 1px solid var(--site-border); border-radius: 5px; padding: 6px 8px; font: inherit; min-width: 0; }
+select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--site-accent); outline-offset: 2px; }
+.csv-options { display: flex; align-items: end; flex-wrap: wrap; gap: 12px 18px; margin-bottom: 10px; }
+.csv-options>label { display: flex; flex-direction: column; gap: 5px; }
+.csv-options>.checkbox-label { flex-direction: row; align-items: center; padding-bottom: 7px; }
+.csv-preview-table th { min-width: 150px; }
+.csv-preview-table input, .csv-preview-table select { display: block; width: 100%; margin: 3px 0; font-size: 11px; }
+#csv-preview { max-height: 40vh; border: 1px solid var(--site-border); border-radius: 6px; }
+.backup-info { white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.9 var(--site-font-mono); }
+#plan-dropzone { border: 1px dashed var(--site-border); padding: 12px; margin-bottom: 14px; border-radius: 7px; }
+.dialog-actions>form { margin: 0; }
+@media (max-width: 900px) { .plan-comparison { grid-template-columns: minmax(0, 1fr); } .data-toolbar>small { width: 100%; margin-left: 0; } }
+@media (max-width: 700px) { .seed-note { margin-block: 6px; } .plan-toolbar { padding-inline: 10px; } .plan-single, .plan-comparison { padding-inline: 10px; } .data-toolbar { padding: 10px; } .wide-dialog { padding: 18px; } .inspect-cell { max-width: 220px; } .labs-panel>summary>span { display: block; margin: 4px 0 0 14px; } }

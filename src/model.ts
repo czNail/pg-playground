@@ -1,7 +1,7 @@
-export interface Column { name: string; type: string }
-export interface Table { schema: string; name: string; kind: string; columns: Column[] }
+export interface Column { name: string; type: string; nullable?: boolean; default?: string | null }
+export interface Table { schema: string; name: string; kind: string; columns: Column[]; indexes?: {name: string; definition: string}[]; constraints?: {name: string; definition: string}[]; estimatedRows?: number }
 export interface Result {
-  fields: { name: string; dataTypeID: number }[];
+  fields: { name: string; dataTypeID: number; type?: string }[];
   rows: unknown[][];
   totalRows: number;
   affectedRows?: number;

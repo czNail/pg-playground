@@ -4,7 +4,7 @@ export const examples = [
     sql: `-- 欢迎来到 PostgreSQL 实验台。\n-- 选中部分 SQL 可单独执行，Ctrl / ⌘ + Enter 运行。\nSELECT id, customer_id, amount, status, created_at\nFROM public.orders\nORDER BY id\nLIMIT 10;`
   },
   {
-    id: 'scan', name: '观察扫描方式', hint: '先查看执行计划，再试试右侧的“创建索引”示例。',
+    id: 'scan', name: '观察扫描方式', hint: '先查看执行计划，再试试“创建索引”示例。',
     sql: `-- 点击 EXPLAIN 查看估算，ANALYZE 查看实际执行。\nSELECT id, customer_id, amount, status\nFROM public.orders\nWHERE customer_id = 42;`
   },
   {

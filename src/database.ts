@@ -23,8 +23,15 @@ export async function schema(db: PGlite): Promise<Table[]> {
   const result = await db.query<{schema: string; name: string; kind: string; columns: Table['columns']}>(`
     SELECT n.nspname AS schema, c.relname AS name,
       CASE c.relkind WHEN 'v' THEN '视图' WHEN 'm' THEN '物化视图' ELSE '表' END AS kind,
-      COALESCE((SELECT json_agg(json_build_object('name', a.attname, 'type', format_type(a.atttypid, a.atttypmod)) ORDER BY a.attnum)
-        FROM pg_attribute a WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped), '[]') AS columns
+      c.reltuples AS "estimatedRows",
+      COALESCE((SELECT json_agg(json_build_object('name', a.attname, 'type', format_type(a.atttypid, a.atttypmod),
+        'nullable', NOT a.attnotnull, 'default', pg_get_expr(d.adbin, d.adrelid)) ORDER BY a.attnum)
+        FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+        WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped), '[]') AS columns,
+      COALESCE((SELECT json_agg(json_build_object('name', i.relname, 'definition', pg_get_indexdef(i.oid)) ORDER BY i.relname)
+        FROM pg_index x JOIN pg_class i ON i.oid = x.indexrelid WHERE x.indrelid = c.oid), '[]') AS indexes,
+      COALESCE((SELECT json_agg(json_build_object('name', con.conname, 'definition', pg_get_constraintdef(con.oid)) ORDER BY con.conname)
+        FROM pg_constraint con WHERE con.conrelid = c.oid), '[]') AS constraints
     FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname NOT IN ('pg_catalog', 'information_schema', '_playground')
       AND n.nspname NOT LIKE 'pg_%' AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
@@ -50,8 +57,11 @@ export async function execute(db: PGlite, sql: string, mode: string): Promise<Ex
         })];
       } else raw = [await db.query(prefix + sql, [], options)];
     } else raw = await db.exec(sql, options);
+    const oids = [...new Set(raw.flatMap(result => result.fields.map(field => field.dataTypeID)))];
+    const types = oids.length ? await db.query<{oid: number; name: string}>('SELECT oid::int AS oid, pg_catalog.format_type(oid, NULL) AS name FROM pg_catalog.pg_type WHERE oid = ANY($1::oid[])', [oids]) : {rows: []};
+    const names = new Map(types.rows.map(type => [type.oid, type.name]));
     const results: Result[] = raw.map(result => ({
-      fields: result.fields,
+      fields: result.fields.map(field => ({...field, type: names.get(field.dataTypeID)})),
       rows: (result.rows as unknown[][]).slice(0, ROW_LIMIT),
       totalRows: result.rows.length,
       affectedRows: result.rowCount ?? (['INSERT', 'UPDATE', 'DELETE', 'MERGE', 'COPY'].includes(result.command || '') ? result.affectedRows : undefined),

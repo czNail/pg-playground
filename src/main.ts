@@ -10,7 +10,11 @@ import { DatabaseClient } from './client';
 import { QueryInterruptedError } from './connection';
 import { examples } from './examples';
 import { extensionCatalog, extensionExample, type ExtensionState } from './extensions';
-import { cellText, quoteIdentifier, toCSV, planFrom, ROW_LIMIT, type Execution, type Result, type Table, type HistoryEntry, type Plan, type PlanNode } from './model';
+import { PlanViewer } from './plan-view';
+import { installDataTools } from './data-tools';
+import { labs } from './labs';
+import { copyText } from './ui';
+import { cellText, quoteIdentifier, toCSV, planFrom, ROW_LIMIT, type Execution, type Result, type Table, type HistoryEntry, type Plan } from './model';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string) {
@@ -36,12 +40,14 @@ let results: Result[] = [];
 let selectedResult = 0;
 let page = 0;
 let currentPlan: Plan | null = null;
-let planJSON = false;
 let notices: string[] = [];
 let toastTimer: ReturnType<typeof setTimeout>;
 let history: HistoryEntry[] = [];
 let storedDraft: string | null = null;
 let draftTimer: ReturnType<typeof setTimeout>;
+const planViewer = new PlanViewer($('plan-panel'), toast, () => showTab('plan'));
+let cellValue = '';
+$('copy-cell').addEventListener('click', () => void copyText(cellValue, toast));
 try {
   storedDraft = localStorage.getItem(DRAFT_KEY);
   const parsed = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
@@ -151,6 +157,7 @@ function connectionError(error: unknown) {
   setBusy(false);
 }
 function renderSchema(tables: Table[]) {
+  const openTables = new Set(Array.from($('schema-list').querySelectorAll<HTMLDetailsElement>('details.table-entry[open]')).map(node => node.dataset.table));
   $('table-count').textContent = String(tables.length);
   $('schema-list').replaceChildren();
   const completions: Record<string, string[]> = {};
@@ -159,14 +166,29 @@ function renderSchema(tables: Table[]) {
     completions[`${table.schema}.${table.name}`] = table.columns.map(column => column.name);
     if (table.schema === 'public') completions[table.name] = table.columns.map(column => column.name);
     const details = element('details', 'table-entry');
+    details.dataset.table = `${table.schema}.${table.name}`;
+    details.open = openTables.has(details.dataset.table);
     const summary = element('summary');
     summary.title = `${table.schema}.${table.name}`;
     summary.append(element('span', 'table-icon', '▦'), element('span', 'table-name', table.schema === 'public' ? table.name : `${table.schema}.${table.name}`), element('span', 'table-kind', table.kind));
     details.append(summary);
     for (const column of table.columns) {
       const row = element('div', 'table-column');
-      row.append(element('span', '', column.name), element('small', '', column.type));
+      row.append(element('span', '', column.name), element('small', '', column.type + (column.nullable === false ? ' · NOT NULL' : '')));
+      row.title = column.default ? `默认值：${column.default}` : `${column.name} · ${column.type}`;
       details.append(row);
+      if (column.default) details.append(element('small', 'schema-default', `默认：${column.default}`));
+    }
+    if (table.estimatedRows !== undefined && table.estimatedRows >= 0) details.append(element('p', 'schema-estimate', `约 ${Math.round(table.estimatedRows).toLocaleString()} 行 · 统计估算`));
+    for (const [title, entries] of [['索引', table.indexes ?? []], ['约束', table.constraints ?? []]] as const) {
+      if (!entries.length) continue;
+      const group = element('details', 'schema-properties'); group.append(element('summary', '', `${title} · ${entries.length}`));
+      for (const entry of entries) {
+        const item = element('details', 'schema-property');
+        item.append(element('summary', '', entry.name), element('pre', '', entry.definition), button('复制定义', 'text-button', () => void copyText(entry.definition, toast)));
+        group.append(item);
+      }
+      details.append(group);
     }
     details.append(button('预览前 100 行 ↗', 'preview-table', () => replaceSQL(`SELECT *\nFROM ${qualified}\nLIMIT 100;`)));
     $('schema-list').append(details);
@@ -316,7 +338,7 @@ function renderResults() {
     const thead = element('thead');
     const headers = element('tr');
     const numberHeader = element('th', 'row-number', '#'); numberHeader.scope = 'col'; headers.append(numberHeader);
-    current.fields.forEach(field => { const th = element('th', '', field.name); th.scope = 'col'; th.title = `PostgreSQL 类型 OID: ${field.dataTypeID}`; headers.append(th); });
+    current.fields.forEach(field => { const th = element('th', '', field.name); th.scope = 'col'; th.append(element('small', 'column-type', field.type || `OID ${field.dataTypeID}`)); headers.append(th); });
     thead.append(headers); table.append(thead);
     const body = element('tbody');
     current.rows.slice(page * 100, (page + 1) * 100).forEach((row, index) => {
@@ -325,8 +347,18 @@ function renderResults() {
       current.fields.forEach((_, column) => {
         const value = row[column];
         const text = cellText(value, current.fields[column].dataTypeID);
-        const td = element('td', value === null ? 'null-cell' : '', value === null ? 'NULL' : text.length > 500 ? text.slice(0, 500) + '…' : text);
-        if (text.length > 80) td.title = text.slice(0, 4000);
+        const td = element('td', value === null ? 'null-cell' : '');
+        const cell = button(value === null ? 'NULL' : text === '' ? "''" : text.length > 160 ? text.slice(0, 160) + '…' : text, 'inspect-cell', () => {
+          cellValue = value === null ? 'NULL' : text;
+          $('cell-title').textContent = `${current.fields[column].name} · 第 ${page * 100 + index + 1} 行`;
+          $('cell-type').textContent = `${current.fields[column].type || 'OID ' + current.fields[column].dataTypeID}${value === null ? ' · NULL' : text === '' ? ' · 空字符串' : ''}`;
+          let content = cellValue;
+          if ([114, 3802].includes(current.fields[column].dataTypeID)) { try { content = JSON.stringify(typeof value === 'object' ? value : JSON.parse(text), null, 2); } catch { /* Show the original text. */ } }
+          $('cell-content').textContent = content;
+          ($('cell-dialog') as HTMLDialogElement).showModal();
+        });
+        cell.setAttribute('aria-label', `查看第 ${page * 100 + index + 1} 行 ${current.fields[column].name}：${cellValuePreview(value, text)}`);
+        cell.title = '点击查看完整值并复制'; td.append(cell);
         tr.append(td);
       });
       body.append(tr);
@@ -346,44 +378,7 @@ function renderResults() {
   }
   if (notices.length) panel.append(element('pre', 'notice', notices.join('\n')));
 }
-function renderPlan() {
-  const panel = $('plan-panel');
-  panel.replaceChildren();
-  if (!currentPlan) { emptyPanel(panel, '还没有执行计划', '选中一条 SQL，点击 EXPLAIN 或 ANALYZE。ANALYZE 按钮仅做只读分析。'); return; }
-  const plan = currentPlan;
-  const top = element('div', 'plan-top');
-  const metrics = element('div', 'plan-metrics');
-  for (const [label, value] of [['估算成本', plan.Plan['Total Cost']], ['规划时间', plan['Planning Time']], ['执行时间', plan['Execution Time']]] as const) {
-    if (value !== undefined) { const metric = element('span', '', label); metric.append(element('strong', '', label === '估算成本' ? String(value) : `${value} ms`)); metrics.append(metric); }
-  }
-  top.append(metrics, button(planJSON ? '查看计划树' : '查看 JSON', 'text-button', () => { planJSON = !planJSON; renderPlan(); }));
-  panel.append(top);
-  if (planJSON) panel.append(element('pre', 'plan-json', JSON.stringify(plan, null, 2)));
-  else {
-    const tree = element('div', 'plan-tree');
-    function nodeView(node: PlanNode): HTMLElement {
-      const details = element('details', 'plan-node'); details.open = true;
-      const summary = element('summary');
-      summary.append(element('strong', '', node['Node Type']), element('span', '', node['Index Name'] || node['Relation Name'] || ''));
-      const actual = node['Actual Rows'];
-      const loops = node['Actual Loops'];
-      const metrics = [`cost ${node['Total Cost'] ?? '—'}`, `rows ${node['Plan Rows'] ?? '—'}`];
-      if (actual !== undefined) metrics.push(`actual ${actual} × ${loops ?? 1}`, `${node['Actual Total Time']} ms`);
-      summary.append(element('span', '', metrics.join(' · '))); details.append(summary);
-      const metadata = Object.entries(node).filter(([key]) => !['Plans', 'Node Type', 'Relation Name', 'Index Name', 'Total Cost', 'Plan Rows', 'Actual Rows', 'Actual Total Time', 'Actual Loops'].includes(key));
-      const useful = metadata.filter(([key]) => ['Filter', 'Index Cond', 'Recheck Cond', 'Hash Cond', 'Merge Cond', 'Join Filter', 'Sort Key', 'Group Key'].includes(key));
-      if (useful.length) details.append(element('pre', 'plan-details', useful.map(([key, value]) => `${key}: ${cellText(value)}`).join('\n')));
-      if (metadata.length) {
-        const properties = element('details', 'node-properties');
-        properties.append(element('summary', '', '节点详情'), element('pre', 'plan-details', metadata.map(([key, value]) => `${key}: ${cellText(value)}`).join('\n')));
-        details.append(properties);
-      }
-      node.Plans?.forEach(child => details.append(nodeView(child)));
-      return details;
-    }
-    tree.append(nodeView(plan.Plan)); panel.append(tree);
-  }
-}
+function renderPlan() { planViewer.render(); }
 function renderHistory() {
   const panel = $('history-panel'); panel.replaceChildren();
   if (!history.length) { emptyPanel(panel, '每一次实验，都有迹可循', '最近 30 次运行记录保存在当前浏览器。点击记录可载入 SQL，不会自动运行。'); return; }
@@ -426,9 +421,11 @@ async function run(mode: string, overrideSQL?: string) {
     results = execution.results; notices = execution.notices;
     selectedResult = Math.max(0, results.length - 1);
     currentPlan = results.map(planFrom).find(plan => plan !== null) ?? null;
-    $('execution-summary').textContent = `✓ ${execution.elapsed.toFixed(1)} ms`;
+    $('execution-summary').textContent = `✓ 请求耗时 ${execution.elapsed.toFixed(1)} ms`;
+    $('execution-summary').title = '从执行 SQL 到整理结果的耗时，包含本地存储和结果处理，不等于计划中的数据库执行时间，也不是服务器性能基准。';
     $('result-badge').textContent = String(results[selectedResult]?.totalRows ?? 0);
     $('result-badge').hidden = false;
+    if (currentPlan) planViewer.capture(currentPlan, query, `浏览器本地 · ${$('engine-version').textContent}`);
     renderResults(); renderPlan();
     if (currentPlan) showTab('plan');
     saveHistory({sql: query, mode, at: new Date().toISOString(), elapsed: execution.elapsed, ok: true});
@@ -485,7 +482,7 @@ $('reset-dialog').addEventListener('close', async () => {
     const info = await db.call('reset', {mode: db.mode});
     renderSchema(info.tables); renderExtensions(info.extensions);
     $('extension-feedback').hidden = true;
-    results = []; currentPlan = null; notices = [];
+    results = []; currentPlan = null; notices = []; planViewer.clear();
     renderResults(); renderPlan(); $('query-error').hidden = true; $('result-badge').hidden = true; $('execution-summary').textContent = '';
     toast('数据库已重置，示例数据已恢复，扩展可重新启用。');
   } catch (error) { db.stop(); connectionError(error); }
@@ -494,6 +491,30 @@ $('reset-dialog').addEventListener('close', async () => {
 window.addEventListener('pagehide', () => { saveDraft(); db.stop(); });
 window.addEventListener('pageshow', event => { if (event.persisted) { busy = false; void connect(db.mode); } });
 
+function cellValuePreview(value: unknown, text: string) { return value === null ? 'NULL' : text === '' ? '空字符串' : text.slice(0, 80); }
+const labSelect = $('lab-select') as HTMLSelectElement;
+labs.forEach(lab => { const option = element('option', '', lab.name); option.value = lab.id; labSelect.append(option); });
+function renderLab() {
+  const lab = labs.find(item => item.id === labSelect.value)!;
+  const content = $('lab-content'); content.replaceChildren(element('h3', '', lab.goal), element('p', 'panel-note', lab.observe));
+  const steps = element('div', 'tool-row lab-steps');
+  for (const step of lab.steps) steps.append(button(step.name, '', () => {
+    replaceSQL(step.sql);
+    toast(step.mode === 'analyze' ? 'SQL 已载入。点击 ANALYZE 查看计划；可保留为 A 后继续比较。' : 'SQL 已载入，点击“运行 SQL”执行。');
+    $('editor').scrollIntoView({behavior: 'smooth', block: 'center'});
+  }));
+  content.append(steps);
+}
+labSelect.addEventListener('change', renderLab); renderLab();
+installDataTools({db, busy: () => busy, ready: () => ready, setBusy, refresh: refreshSchema, replaceSQL,
+  restored(info) {
+    renderSchema(info.tables); renderExtensions(info.extensions);
+    results = []; currentPlan = null; notices = []; planViewer.clear();
+    renderResults(); $('query-error').hidden = true; $('result-badge').hidden = true; $('execution-summary').textContent = '';
+    $('engine-version').textContent = `PostgreSQL ${info.version} · PGlite 0.5.11`;
+  }
+});
 renderHistory();
+renderPlan();
 renderExtensions([]);
 void connect();

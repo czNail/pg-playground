@@ -6,6 +6,7 @@ import dataURL from '../node_modules/@electric-sql/pglite/dist/pglite.data?url';
 import { createSession } from './worker-session';
 import { extensionBundles } from './extension-bundles';
 import { DATABASE_NAME, DATABASE_IDB_NAME } from './model';
+import { restoreJournal } from './restore-journal';
 
 async function checked(url: string) {
   const response = await fetch(url);
@@ -29,5 +30,5 @@ async function erase() {
     request.onblocked = () => reject(Error('数据库仍被占用，请关闭其他实验台标签页后重试。'));
   });
 }
-const handle = createSession(create, erase, response => self.postMessage(response));
+const handle = createSession(create, erase, response => self.postMessage(response), restoreJournal);
 self.onmessage = event => handle(event.data);
