@@ -1,0 +1,17 @@
+import type { Extensions } from '@electric-sql/pglite';
+import vector from '../node_modules/@electric-sql/pglite-pgvector/dist/vector.tar.gz?url';
+import pg_trgm from '../node_modules/@electric-sql/pglite/dist/pg_trgm.tar.gz?url';
+import citext from '../node_modules/@electric-sql/pglite/dist/citext.tar.gz?url';
+import hstore from '../node_modules/@electric-sql/pglite/dist/hstore.tar.gz?url';
+import ltree from '../node_modules/@electric-sql/pglite/dist/ltree.tar.gz?url';
+import pgcrypto from '../node_modules/@electric-sql/pglite/dist/pgcrypto.tar.gz?url';
+import uuid_ossp from '../node_modules/@electric-sql/pglite/dist/uuid-ossp.tar.gz?url';
+import pageinspect from '../node_modules/@electric-sql/pglite/dist/pageinspect.tar.gz?url';
+import pg_visibility from '../node_modules/@electric-sql/pglite/dist/pg_visibility.tar.gz?url';
+
+// Register the same resources on every boot, including checkpoint recovery.
+// CREATE EXTENSION in the database is the single source of truth for enablement.
+export function extensionBundles(baseURL: string): Extensions {
+  return Object.fromEntries(Object.entries({vector, pg_trgm, citext, hstore, ltree, pgcrypto,
+    'uuid-ossp': uuid_ossp, pageinspect, pg_visibility}).map(([name, path]) => [name, new URL(path, baseURL)]));
+}

@@ -8,7 +8,7 @@
   "tool": {
     "url": "https://cznail.github.io/pg-playground/",
     "subtitle": "打开即用的 PostgreSQL 实验环境",
-    "features": ["SQL 编辑器", "执行计划", "本地保存"],
+    "features": ["SQL 编辑器", "执行计划", "9 种扩展"],
     "status": "available"
   }
 }

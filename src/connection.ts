@@ -1,6 +1,7 @@
 import type { Table } from './model';
+import type { ExtensionState } from './extensions';
 
-export interface BootInfo {version: string; tables: Table[]}
+export interface BootInfo {version: string; tables: Table[]; extensions: ExtensionState[]}
 export type Activity = 'idle' | 'running' | 'saving' | 'recovering';
 export interface WorkerResponse {
   id: number;

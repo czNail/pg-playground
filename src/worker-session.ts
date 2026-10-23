@@ -1,5 +1,6 @@
 import type { PGlite } from '@electric-sql/pglite';
 import { initialize, execute, schema } from './database';
+import { extensionStates, enableExtensions } from './extensions';
 import type { WorkerResponse } from './connection';
 
 /** Shared by the browser worker and the real-engine recovery tests. */
@@ -14,7 +15,7 @@ export function createSession(
   async function boot(checkpoint?: Blob) {
     db = await create(mode, checkpoint);
     const version = await initialize(db);
-    return {version, tables: await schema(db)};
+    return {version, tables: await schema(db), extensions: await extensionStates(db)};
   }
   async function snapshot() {
     // Never save an open or failed transaction as a recovery point.
@@ -35,9 +36,11 @@ export function createSession(
           send({id, phase: 'running'});
           try { data = await execute(db, payload.sql, payload.mode); }
           finally { send({id, phase: 'saving'}); }
-        } else if (method === 'schema') data = await schema(db);
+        } else if (method === 'enable-extensions') data = {extensions: await enableExtensions(db, payload.names), tables: await schema(db)};
+        else if (method === 'extensions') data = await extensionStates(db);
+        else if (method === 'schema') data = await schema(db);
         else throw Error('未知操作。');
-        const checkpoint = method === 'schema' ? undefined : await snapshot();
+        const checkpoint = method === 'schema' || method === 'extensions' ? undefined : await snapshot();
         send({id, data, checkpoint});
       } catch (error) {
         const e = error as Error & {code?: string; detail?: string; hint?: string; position?: string};

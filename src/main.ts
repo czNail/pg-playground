@@ -9,6 +9,7 @@ import { tags } from '@lezer/highlight';
 import { DatabaseClient } from './client';
 import { QueryInterruptedError } from './connection';
 import { examples } from './examples';
+import { extensionCatalog, extensionExample, type ExtensionState } from './extensions';
 import { cellText, quoteIdentifier, toCSV, planFrom, ROW_LIMIT, type Execution, type Result, type Table, type HistoryEntry, type Plan, type PlanNode } from './model';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -30,6 +31,7 @@ const HISTORY_KEY = 'pg-playground:v1:history';
 const db = new DatabaseClient();
 let busy = false;
 let ready = false;
+let extensions: ExtensionState[] = [];
 let results: Result[] = [];
 let selectedResult = 0;
 let page = 0;
@@ -123,6 +125,7 @@ function setBusy(value: boolean) {
   if (!value) { $('stop-query').hidden = true; $('run').hidden = false; }
   $('retry').toggleAttribute('disabled', value);
   $('memory-mode').toggleAttribute('disabled', value);
+  updateExtensionControls();
 }
 db.onActivity = activity => {
   $('stop-query').hidden = activity === 'idle';
@@ -142,6 +145,7 @@ function connectionError(error: unknown) {
   $('connection-error').hidden = false;
   $('connection-error-text').textContent = error instanceof Error ? error.message : String(error);
   $('connection-status').textContent = '数据库未连接';
+  $('extension-summary').textContent = '连接后查看状态';
   $('connection-dot').className = 'connection-dot error';
   if (!$('schema-list').querySelector('.table-entry')) $('schema-list').replaceChildren(element('p', 'subtle loading-copy', '连接后显示表结构。'));
   setBusy(false);
@@ -170,10 +174,71 @@ function renderSchema(tables: Table[]) {
   if (!tables.length) $('schema-list').append(element('p', 'subtle loading-copy', '还没有表，写一条 CREATE TABLE 开始。'));
   editor.dispatch({effects: language.reconfigure(sql({dialect: PostgreSQL, schema: completions, upperCaseKeywords: true}))});
 }
-async function refreshSchema() {
-  try { renderSchema(await db.call<Table[]>('schema')); }
-  catch (error) { toast('表结构暂未更新：' + (error as Error).message); }
+function updateExtensionControls() {
+  document.querySelectorAll<HTMLButtonElement>('[data-enable-extension]').forEach(node => {
+    const state = extensions.find(item => item.name === node.dataset.enableExtension);
+    node.disabled = busy || !ready || !state?.availableVersion || !!state.installedVersion;
+  });
+  $('enable-all-extensions').toggleAttribute('disabled', busy || !ready || !extensions.some(item => item.availableVersion && !item.installedVersion));
+  document.querySelectorAll<HTMLButtonElement>('[data-extension-example]').forEach(node => { node.disabled = busy; });
 }
+function renderExtensions(states: ExtensionState[]) {
+  extensions = states;
+  const count = states.filter(item => item.installedVersion).length;
+  $('extension-summary').textContent = ready || states.length ? `${count} / ${extensionCatalog.length} 已启用` : '连接后查看状态';
+  const list = $('extension-list');
+  list.replaceChildren();
+  for (const item of extensionCatalog) {
+    const state = states.find(state => state.name === item.name);
+    const card = element('article', 'extension-card');
+    const heading = element('div', 'extension-heading');
+    heading.append(element('h3', '', item.label), element('span', 'extension-category', item.category));
+    const version = element('span', state?.installedVersion ? 'extension-version enabled' : 'extension-version',
+      state?.installedVersion ? `v${state.installedVersion} · ${state.schema}` : state?.availableVersion ? `可用版本 ${state.availableVersion}` : '连接后查看版本');
+    const actions = element('div', 'extension-actions');
+    const enable = button(state?.installedVersion ? '已启用' : '启用', '', () => void installExtensions([item.name]));
+    enable.dataset.dbAction = ''; enable.dataset.enableExtension = item.name;
+    enable.setAttribute('aria-label', `${state?.installedVersion ? '已启用' : '启用'} ${item.label}`);
+    const example = button('查看示例 ↗', 'text-button', () => {
+      let sql = extensionExample(item.name);
+      // Respect an extension installed manually in a custom schema.
+      if (state?.schema && state.schema !== 'public') sql = `-- 将扩展所在 schema 加入查询路径。\nSET search_path TO ${quoteIdentifier(state.schema)}, public, pg_catalog;\n\n` + sql;
+      replaceSQL(sql);
+      $('editor').scrollIntoView({behavior: 'smooth', block: 'center'});
+      toast(`${item.label} 示例已载入，尚未执行。`);
+    });
+    example.dataset.extensionExample = item.name;
+    example.setAttribute('aria-label', `查看 ${item.label} 示例`);
+    actions.append(enable, example);
+    card.append(heading, element('p', '', item.description), version, actions);
+    list.append(card);
+  }
+  updateExtensionControls();
+}
+async function refreshSchema() {
+  try {
+    const [tables, states] = await Promise.all([db.call<Table[]>('schema'), db.call<ExtensionState[]>('extensions')]);
+    renderSchema(tables); renderExtensions(states);
+  } catch (error) {
+    $('extension-summary').textContent = '状态待刷新';
+    toast('结构与扩展状态暂未更新：' + (error as Error).message);
+  }
+}
+async function installExtensions(names: string[]) {
+  if (busy || !ready || !names.length) return;
+  setBusy(true);
+  const feedback = $('extension-feedback');
+  feedback.hidden = false; feedback.classList.remove('error'); feedback.textContent = '正在启用扩展…';
+  try {
+    const info = await db.call<{tables: Table[]; extensions: ExtensionState[]}>('enable-extensions', {names});
+    renderSchema(info.tables); renderExtensions(info.extensions);
+    feedback.textContent = '扩展已启用。可查看示例，或直接在编辑器中运行 SQL。';
+  } catch (error) {
+    feedback.classList.add('error'); feedback.textContent = (error as Error).message;
+    if (!db.connected) connectionError(error);
+  } finally { setBusy(false); }
+}
+$('enable-all-extensions').addEventListener('click', () => void installExtensions(extensions.filter(item => item.availableVersion && !item.installedVersion).map(item => item.name)));
 async function connect(mode = 'persistent') {
   if (busy) return;
   ready = false;
@@ -181,9 +246,10 @@ async function connect(mode = 'persistent') {
   $('connection-status').textContent = '正在启动数据库…';
   $('connection-dot').className = 'connection-dot';
   $('connection-error').hidden = true;
+  $('extension-feedback').hidden = true;
   try {
     const info = await db.start(mode);
-    renderSchema(info.tables);
+    renderSchema(info.tables); renderExtensions(info.extensions);
     ready = true;
     $('connection-status').textContent = mode === 'memory' ? '临时数据库已就绪' : '本地数据库已就绪';
     $('connection-dot').className = 'connection-dot ready';
@@ -348,6 +414,7 @@ async function run(mode: string, overrideSQL?: string) {
   if (!query.trim()) { toast('请先输入 SQL。'); editor.focus(); return; }
   saveDraft(); setBusy(true);
   $('query-error').hidden = true;
+  $('extension-feedback').hidden = true;
   $('execution-summary').textContent = '执行中…';
   $('result-badge').hidden = true;
   results = []; currentPlan = null; notices = []; page = 0;
@@ -373,7 +440,7 @@ async function run(mode: string, overrideSQL?: string) {
     emptyPanel($('results-panel'), interrupted ? '查询已停止，可以继续运行 SQL' : '这条 SQL 没有执行成功', interrupted ? '可调整运行时限后重试，或修改 SQL。' : '根据下方提示修改后再试一次。');
     const panel = $('query-error'); panel.replaceChildren(element('strong', '', e.message));
     if (interrupted) {
-      renderSchema(e.info.tables);
+      renderSchema(e.info.tables); renderExtensions(e.info.extensions);
       ready = true;
       $('connection-error').hidden = true;
       $('connection-status').textContent = db.mode === 'memory' ? '临时数据库已就绪' : '本地数据库已就绪';
@@ -387,6 +454,7 @@ async function run(mode: string, overrideSQL?: string) {
     panel.hidden = false;
     saveHistory({sql: query, mode, at: new Date().toISOString(), elapsed: performance.now() - started, ok: false});
     if (!db.connected) connectionError(e);
+    else if (!interrupted) await refreshSchema();
   } finally { setBusy(false); }
 }
 
@@ -415,10 +483,11 @@ $('reset-dialog').addEventListener('close', async () => {
   setBusy(true);
   try {
     const info = await db.call('reset', {mode: db.mode});
-    renderSchema(info.tables);
+    renderSchema(info.tables); renderExtensions(info.extensions);
+    $('extension-feedback').hidden = true;
     results = []; currentPlan = null; notices = [];
     renderResults(); renderPlan(); $('query-error').hidden = true; $('result-badge').hidden = true; $('execution-summary').textContent = '';
-    toast('数据库已重置，示例数据已恢复。');
+    toast('数据库已重置，示例数据已恢复，扩展可重新启用。');
   } catch (error) { db.stop(); connectionError(error); }
   finally { setBusy(false); }
 });
@@ -426,4 +495,5 @@ window.addEventListener('pagehide', () => { saveDraft(); db.stop(); });
 window.addEventListener('pageshow', event => { if (event.persisted) { busy = false; void connect(db.mode); } });
 
 renderHistory();
+renderExtensions([]);
 void connect();

@@ -21,7 +21,8 @@
     "@codemirror/language": "^6.11.3",
     "@codemirror/autocomplete": "^6.18.7",
     "@lezer/highlight": "^1.2.1",
-    "codemirror": "6.0.2"
+    "codemirror": "6.0.2",
+    "@electric-sql/pglite-pgvector": "0.0.12"
   },
   "devDependencies": {
     "vite": "8.3.5",

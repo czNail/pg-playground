@@ -4,6 +4,7 @@ import wasmURL from '../node_modules/@electric-sql/pglite/dist/pglite.wasm?url';
 import initURL from '../node_modules/@electric-sql/pglite/dist/initdb.wasm?url';
 import dataURL from '../node_modules/@electric-sql/pglite/dist/pglite.data?url';
 import { createSession } from './worker-session';
+import { extensionBundles } from './extension-bundles';
 import { DATABASE_NAME, DATABASE_IDB_NAME } from './model';
 
 async function checked(url: string) {
@@ -18,7 +19,7 @@ async function create(mode: string, checkpoint?: Blob) {
     checked(dataURL).then(r => r.blob())
   ]);
   return PGlite.create({loadDataDir: checkpoint, dataDir: mode === 'memory' ? 'memory://' : 'idb://' + DATABASE_NAME,
-    pgliteWasmModule, initdbWasmModule, fsBundle});
+    pgliteWasmModule, initdbWasmModule, fsBundle, extensions: extensionBundles(self.location.href)});
 }
 async function erase() {
   await new Promise<void>((resolve, reject) => {

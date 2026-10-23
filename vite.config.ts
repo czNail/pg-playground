@@ -7,6 +7,7 @@ export default defineConfig(({command}) => ({
   preview: {allowedHosts: ['terminal.local']},
   optimizeDeps: { exclude: ['@electric-sql/pglite'] },
   worker: { format: 'es' },
+  build: {assetsInlineLimit: 0},
   plugins: [{
     name: 'site-shell',
     transformIndexHtml(html) {
