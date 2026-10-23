@@ -4,7 +4,6 @@
 
 目标地址：<https://cznail.github.io/pg-playground/>
 
-![工作台预览（临时模式）](docs/preview.jpg)
 
 ## 功能
 
@@ -68,4 +67,4 @@ npm run build
 
 ## 验证
 
-`tests/database.test.ts` 使用真实 PGlite，覆盖初始化幂等性、多语句、重复列名、结果上限、索引前后计划变化、只读分析、事务恢复及 CSV。浏览器检查覆盖生产子路径资源、查询/计划交互、SQL 草稿恢复、临时模式重置和主题。HTTP 本地预览不能验证 Web Locks；持久化、标签页锁与 IndexedDB 重置需在 HTTPS 部署后继续验证。
+`tests/database.test.ts` 使用真实 PGlite，覆盖初始化幂等性、多语句、重复列名、结果上限、索引前后计划变化、只读分析、事务恢复及 CSV。HTTPS 正式站点已实测：SQL 查询与计划交互、刷新后的 IndexedDB 数据和 SQL 草稿恢复、第二标签页占用保护、数据库重置与共享主题保留。HTTP 本地预览另覆盖临时模式、CSV 下载及结果安全渲染。
