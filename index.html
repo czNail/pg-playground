@@ -8,13 +8,17 @@
     <title>PostgreSQL 实验台 · 木匠钉子</title>
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <link rel="stylesheet" href="/vendor/site-ui/tokens.css" />
-    <link rel="stylesheet" href="/vendor/site-ui/shell.css" />
     <script src="%BASE_URL%site-ui/runtime.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#editor">跳到 SQL 编辑器</a>
-    <!-- SITE_HEADER -->
     <main class="app-shell">
+      <div class="app-top">
+        <a class="home-return" href="/"><span aria-hidden="true">←</span> 返回个人主页</a>
+        <button class="theme-switch" type="button" data-site-theme aria-label="切换到深色主题" aria-pressed="false">
+          <span aria-hidden="true" class="theme-moon">☾</span><span aria-hidden="true" class="theme-sun">☀</span>
+        </button>
+      </div>
       <section class="page-heading" aria-labelledby="page-title">
         <div>
           <p class="eyebrow"><span class="eyebrow-line"></span> PG / PLAYGROUND <span class="version-tag">01</span></p>
@@ -72,7 +76,6 @@
       </details>
       <details class="help"><summary>关于这个实验台 <span>使用提示与边界</span></summary><div class="help-content"><p><strong>真实的 SQL，独立的本地环境。</strong>基于 PGlite / WebAssembly，支持 PostgreSQL 的查询、索引、事务和执行计划。每位访客的数据独立，不会自动同步到其他设备。</p><p><strong>运行与分析。</strong>支持多条 SQL 和选区执行。EXPLAIN / ANALYZE 每次分析一条语句；ANALYZE 按钮仅做只读分析。手工输入的 SQL 按原意执行，包括 EXPLAIN ANALYZE 写入语句。事务出错时可执行 ROLLBACK 恢复。</p><p><strong>结果与性能。</strong>每条语句最多展示、导出前 1,000 行，结果按每页 100 行浏览。运行耗时包含浏览器与本地存储开销，适合学习计划结构，不代表服务器 PostgreSQL 的性能。运行时限可选 5 秒至 5 分钟或不限，也可点击“停止查询”。停止或超时后自动恢复连接，保留最近保存的数据；未完成事务和会话设置会清除。多语句中已提交的内容请先检查，避免重复写入。</p><p><strong>本地保存。</strong>同一浏览器一次允许一个标签页使用持久化数据库。临时模式的数据在页面关闭后消失，不会覆盖本地数据库。可导入、保存 SQL 文件；CSV 导出只包含当前所选结果集的前 1,000 行。CSV / TSV 可预览后导入新表。完整数据库请使用备份功能，恢复仅支持相同引擎版本；草稿和历史不在数据库备份中。</p><a href="https://github.com/czNail/pg-playground" target="_blank" rel="noopener noreferrer">查看源码 ↗</a><a href="https://pglite.dev/docs/" target="_blank" rel="noopener noreferrer">PGlite 文档 ↗</a></div></details>
     </main>
-    <!-- SITE_FOOTER -->
     <dialog id="reset-dialog" aria-labelledby="reset-title"><form method="dialog"><span class="dialog-kicker">重新开始</span><h2 id="reset-title">重置这个实验台？</h2><p>将删除本实验台中所有自建表、数据和索引，并重新生成示例数据。SQL 草稿与历史记录会保留，已启用扩展需重新启用。</p><p class="subtle">此操作无法撤销，只影响本实验台的数据库。</p><div class="dialog-actions"><button value="cancel">取消</button><button value="reset" class="danger-button">确认重置</button></div></form></dialog>
     <dialog id="plan-import-dialog" class="wide-dialog" aria-labelledby="plan-import-title"><h2 id="plan-import-title">导入外部执行计划</h2><p>粘贴或拖入 EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) 的 JSON 输出，最多 5 MB。只在本地解析，不会连接原数据库或执行 SQL。</p><div id="plan-dropzone"><label for="plan-text">执行计划 JSON</label><textarea id="plan-text" rows="10" spellcheck="false" placeholder='[{"Plan": {"Node Type": "Seq Scan"}}]'></textarea><button type="button" id="choose-plan-file">选择 JSON 文件</button></div><label for="plan-query">对应 SQL（可选，便于对比）</label><textarea id="plan-query" rows="3" spellcheck="false"></textarea><p id="plan-import-error" class="inline-error" role="alert" hidden></p><div class="dialog-actions"><form method="dialog"><button>取消</button></form><button type="button" id="confirm-plan-import" class="primary-button">导入计划</button></div></dialog>
     <dialog id="csv-dialog" class="wide-dialog" aria-labelledby="csv-title"><h2 id="csv-title">导入 CSV / TSV</h2><p>在 public 中创建新表，现有同名表会被拒绝。支持 10 MB、100 列、100,000 行，最多 100 万个单元格；整次导入成功后提交。</p><div class="csv-options"><label>新表名<input id="csv-table" type="text" autocomplete="off" /></label><label>编码<select id="csv-encoding"><option value="utf-8">UTF-8</option><option value="gb18030">GB18030 / GBK</option><option value="utf-16le">UTF-16 LE</option><option value="utf-16be">UTF-16 BE</option></select></label><label>分隔符<select id="csv-delimiter"><option value=",">逗号</option><option value=";">分号</option><option value="&#9;">Tab</option></select></label><label class="checkbox-label"><input id="csv-header" type="checkbox" checked />首行为表头</label><label class="checkbox-label"><input id="csv-empty-null" type="checkbox" checked />空单元格作为 NULL</label></div><p id="csv-count" class="panel-note" role="status"></p><div id="csv-preview" class="table-scroll"></div><p id="csv-error" class="inline-error" role="alert" hidden></p><div class="dialog-actions"><button type="button" id="csv-cancel">取消</button><button type="button" id="confirm-csv-import" class="primary-button">确认导入</button></div></dialog>
